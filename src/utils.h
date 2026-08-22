@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #include "../config.h"
 
@@ -13,6 +14,7 @@ typedef struct {
 typedef struct Arena Arena;
 typedef struct Token Token;
 typedef struct Node Node;
+typedef struct DataType DataType;
 
 StringStream sstream_new(char *str);
 
@@ -43,5 +45,11 @@ void log_to_file(LogLevel level, const char *path, const char *fmt, ...);
 #define LOG(level, ...) ((void)0)
 #endif
 
+char *format_token(Arena *a, Token t);
+char *format_node(Arena *a, Node *n);
 void print_token(Token t);
 void print_node(Node *n);
+
+const char *format_bool(bool value);
+
+char *format_data_type(Arena *a, DataType *type);
