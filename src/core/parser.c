@@ -241,6 +241,17 @@ static Node *parse_type_decl(Parser *p) {
 
 static Node *parse_var_or_func_decl(Parser *p) {
     // TODO
+    // parse type
+    // parse name
+    // expect '=' or '('
+    // if '=' - parse literal and expect ';'
+    // --------
+    // else if '(' - parse args and expect ')'
+    // 
+    // try to:
+    // either get ';' to simply declare function
+    // or
+    // get '{' and parse body + expect '}'
     return NULL;
 }
 
