@@ -1,6 +1,6 @@
-# Vise Grammar
+# Arqis Grammar
 
-This document outlines the syntax for Vise using Extended Backus-Naur Form (EBNF) notation.
+This document outlines the syntax for Arqis using Extended Backus-Naur Form (EBNF) notation.
 
 *Note: This is a work in progress and will evolve as the language matures.*
 

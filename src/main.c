@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 int main(void) {
-    const char *file_path = "main.vz";
+    const char *file_path = "main.qis";
     StringStream ss = read_file(file_path);
 
     Arena a = arena_new(1024*1024);

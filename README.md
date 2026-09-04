@@ -1,11 +1,11 @@
-Vise is a fast, embeddable, statically typed, compiled programming language.
+Arqis is a fast, embeddable, statically typed, compiled programming language.
 
 ## General Info
 
 | Property | Value |
 |----------|-------|
-| **Name** | Vise — no particular reason, just sounds cool |
-| **Extension** | `.vz` — shortened from Vise |
+| **Name** | Arqis — coined name chosen for distinctiveness |
+| **Extension** | `.qis` — compact suffix derived from Arqis |
 | **Syntax** | Mostly C — simple, transparent, nothing hidden or abstracted away |
 
 ## Plans on Improving C
@@ -18,25 +18,26 @@ Vise is a fast, embeddable, statically typed, compiled programming language.
 - **Custom allocations** — a simplified version of `malloc` with optional args for allocation behavior
 - **`import`** — since there are no macros, you get a separate keyword to include modules
 - **Build scripts/recipes** — the build system should be simple and involve nothing other than the language compiler itself
-- **`null` as a type** — allows full compile-time type-safety
+- **Explicit `null` values** — available for pointer-oriented APIs; Arqis does not attempt to provide Rust-like memory safety
 - **`comptime`** — mark things evaluable during compilation so functions or expressions can be reduced in the final binary
-- **Generics** — C lacks code generation for dynamic types, forcing unsafe `void*` casts; Vise fixes this
+- **Generics** — C lacks convenient code generation for reusable typed containers; Arqis plans to provide this without requiring `void*`-style APIs
 - **`std`** — a huge collection of modules; instead of `stdio`/`stdlib`, you import `std.math` and use `std.math.floor`
 - **String interpolation** — readable strings without memorizing format flags and their unique features
-- **Exports** — `static` won't mean "private to this file", but only that a variable preserves its memory across function calls / different struct instances
+- **Visibility and exports** — declarations are public by default; module-level `static` prevents export, while struct-level `static` controls shared storage rather than privacy
+- **C-like memory model** — raw pointers and built-in arrays remain directly usable and are not automatically checked for nullability, lifetime, or bounds; higher-level checked containers will be provided by the standard library
 
 ## Documentation & Deep Dives
 
-For detailed explanations of Vise's design philosophy and internal features, please check out the `docs/` folder:
+For detailed explanations of Arqis's design philosophy and internal features, please check out the `docs/` folder:
 
 *   [Language Features](docs/features.md): Deep dives into Decorators, Memory Allocators, Visibilty/Exports, and OOP differences.
-*   [Compiler Phases](docs/compiler.md): Step-by-step breakdown of how the Vise compiler works internally.
-*   [Grammar](docs/grammar.md): Formal EBNF grammar definitions for the Vise language syntax.
+*   [Compiler Phases](docs/compiler.md): Step-by-step breakdown of how the Arqis compiler works internally.
+*   [Grammar](docs/grammar.md): Formal EBNF grammar definitions for the Arqis language syntax.
 *   [Logging System](docs/logging.md): Overview of the compiler's logging configuration, log levels, and conventions.
 *   [Build System](docs/build.md): Details on the nob-based build system (constants, structs, functions).
 
 ### Naming
-In Vise just like in C you can pretty much do whatever you want, no one will force you to write what is "better", but there are some suggestions that will help in development:
+In Arqis just like in C you can pretty much do whatever you want, no one will force you to write what is "better", but there are some suggestions that will help in development:
 
 1. **Variables and Functions**:
    - Variables (local and global) should use `snake_case`.

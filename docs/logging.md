@@ -1,6 +1,6 @@
 # Logging System
 
-Vise features a centralized, uniform logging system used across the compiler's codebase. It facilitates debugging and troubleshooting by providing color-coded terminal messages and writing persistent records to a log file.
+Arqis features a centralized, uniform logging system used across the compiler's codebase. It facilitates debugging and troubleshooting by providing color-coded terminal messages and writing persistent records to a log file.
 
 The logging system is declared in `src/utils.h` and implemented in `src/utils.c`.
 
@@ -41,7 +41,7 @@ The system supports 5 log levels defined in the `LogLevel` enum (`src/utils.h`):
 ### Macros
 
 #### `LOG(level, fmt, ...)`
-The primary interface for logging within Vise. This macro automatically writes the formatted log message to both the console (with ANSI color codes) and the log file defined by `LOG_FILE_PATH`.
+The primary interface for logging within Arqis. This macro automatically writes the formatted log message to both the console (with ANSI color codes) and the log file defined by `LOG_FILE_PATH`.
 
 - **`level`**: One of the `LogLevel` enum values (e.g., `INFO`, `ERROR`).
 - **`fmt`**: A `printf`-style format string.

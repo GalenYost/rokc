@@ -1,7 +1,7 @@
 // GENERAL
 #define BUILD_FOLDER "build"      // relative build directory, to switch to absolute path use '/' prefix
-#define EXEC_NAME "vise"          // executable name
-#define COMPILER_NAME "Vise"      // just a visual display name
+#define EXEC_NAME "arqis"         // executable name
+#define COMPILER_NAME "Arqis"      // just a visual display name
 
 // LOGGING
 #define ENABLE_LOGS 1             // 1 - enable, 0 - disable
