@@ -58,14 +58,7 @@ plans/
 
 ## Building
 
-```sh
-make            # build with clang
-make gcc        # build with gcc
-make release    # optimized build
-make clean      # remove build artifacts
-```
-
-The build system uses [nob.c](https://tsoding.github.io/nob/) via `nob.c` in the project root.
+See [docs/build.md](docs/build.md) for the build system and available commands.
 
 ## Contributing
 
