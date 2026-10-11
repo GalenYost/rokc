@@ -5,7 +5,7 @@ Status: Planned for 0.1.0
 RokC uses lexical block scopes. A declaration in an inner block may shadow a declaration with
 the same name in an outer block:
 
-```rkc
+```rok
 int value = 1;
 {
     int value = 2;
@@ -27,7 +27,7 @@ before the first release is complete.
 
 Functions used before their definitions require explicit C-style prototypes:
 
-```rkc
+```rok
 int add(int, int);
 int main() { return add(1, 2); }
 int add(int left, int right) { return left + right; }
@@ -35,7 +35,7 @@ int add(int left, int right) { return left + right; }
 
 Prototype parameter names are optional, matching C:
 
-```rkc
+```rok
 int add(int, int);
 int add(int left, int right);
 ```

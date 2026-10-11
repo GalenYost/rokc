@@ -8,7 +8,7 @@ deliberately simple, unsafe memory model.
 | Property | Value |
 |----------|-------|
 | **Name** | RokC |
-| **Extension** | `.rkc` |
+| **Extension** | `.rok` |
 | **Syntax** | Mostly C — simple, transparent, nothing hidden or abstracted away |
 
 ## Key language features
@@ -38,7 +38,7 @@ single-file programs and reports useful diagnostics. Native executable generatio
 
 ```text
 src/
-  main.c            entry point (hardcoded to main.rkc — to be replaced with CLI)
+  main.c            entry point (hardcoded to main.rok — to be replaced with CLI)
   core/
     lexer.c         token model and lexical analysis
     parser.c        partial parser (import, struct, enum, type only)

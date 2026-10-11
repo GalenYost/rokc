@@ -3,7 +3,7 @@
 This document outlines the internal architecture and compilation process for the RokC compiler.
 
 ### Lexical Analysis
-The Lexer takes the `.rkc` source code and converts it into a stream of `Token`s.
+The Lexer takes the `.rok` source code and converts it into a stream of `Token`s.
 It handles ignoring whitespace and comments, identifies keywords, identifiers, string literals, and operators.
 
 ### Syntax Analysis

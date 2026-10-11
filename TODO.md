@@ -1,7 +1,7 @@
 # RokC 0.1.0 TODO
 
 This checklist tracks implementation work for the 0.1.0 front-end release. The release must
-process a single `.rkc` source file, validate it, and report useful diagnostics; native executable
+process a single `.rok` source file, validate it, and report useful diagnostics; native executable
 generation is deferred to 0.2.0.
 
 ## Lexer and tokens
@@ -38,8 +38,8 @@ generation is deferred to 0.2.0.
 
 - [ ] Add structured diagnostics with source spans, notes, and severity.
 - [ ] Distinguish recoverable source errors from fatal/internal compiler errors.
-- [ ] Implement `rokc check <source.rkc>`.
-- [ ] Implement `rokc dump-ast <source.rkc>`.
+- [ ] Implement `rokc check <source.rok>`.
+- [ ] Implement `rokc dump-ast <source.rok>`.
 - [ ] Implement `rokc help` and `rokc version`.
 - [ ] Remove hardcoded source-file assumptions.
 

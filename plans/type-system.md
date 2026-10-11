@@ -62,7 +62,7 @@ this does not establish a general implicit conversion between `char` and `u8` ex
 
 `bool` is a logical type with canonical representation values `0` and `1`:
 
-```rkc
+```rok
 bool enabled = true;
 bool disabled = false;
 ```
@@ -71,7 +71,7 @@ The only boolean literals are `true` and `false`. Numeric literals `0` and `1` r
 
 Conditions are strictly boolean. Control-flow conditions and logical operators do not implicitly convert integers or pointers to `bool`:
 
-```rkc
+```rok
 if (count != 0) { ... }
 if (ptr != null) { ... }
 ```
@@ -82,7 +82,7 @@ Expressions such as `if (count)` and `if (ptr)` are rejected unless an explicit 
 
 Pointers are nullable by definition. Conceptually, `T*` behaves like a pointer to `T` plus a null state, but users do not write an explicit union type for it:
 
-```rkc
+```rok
 Player* player = null;
 ```
 
@@ -101,7 +101,7 @@ The compiler may use an internal null type for literal checking, but `null` is n
 
 The core syntax distinguishes fixed-size arrays from raw pointers:
 
-```rkc
+```rok
 int[4] values = { 1, 2, 3, 4 };
 int* pointer = values; // implicit decay to &values[0]
 ```
@@ -122,7 +122,7 @@ global zero-initialization rule.
 
 Fixed arrays compose into multidimensional arrays:
 
-```rkc
+```rok
 int[3][4] matrix;
 matrix[1][2] = 7;
 ```
@@ -132,7 +132,7 @@ Nested arrays are contiguous in row-major order. Decay applies to the outermost 
 
 `sizeof` preserves the array object before decay, following C:
 
-```rkc
+```rok
 int[4] values;
 int* pointer = values;
 
@@ -144,7 +144,7 @@ For a VLA, `sizeof` uses its runtime bound and returns a runtime `usize`.
 
 Variable-length arrays are also part of the core language:
 
-```rkc
+```rok
 void process(int count) {
     int[count] values;
 }
@@ -174,7 +174,7 @@ shares the original storage and never copies it.
 
 `void` represents the absence of a value and is initially valid only as a function return type:
 
-```rkc
+```rok
 void log_message(char* message) {
     // no return value
 }
@@ -205,7 +205,7 @@ Integer-width, signedness, integer/float, pointer/pointer, pointer/integer, and 
 
 The initial cast syntax is C-style:
 
-```rkc
+```rok
 i64 wider = (i64)value;
 float ratio = (float)count;
 ```
@@ -216,7 +216,7 @@ Because this syntax overlaps with parenthesized expressions, parsing `(Type)expr
 
 Unsuffixed numeric literals are compile-time values without a fixed runtime type. Their destination declaration may choose the type when the value is representable:
 
-```rkc
+```rok
 int x = 10;
 i32 y = 10;
 u8 z = 255;
@@ -224,7 +224,7 @@ u8 z = 255;
 
 This exception applies to literals, not to already-typed expressions:
 
-```rkc
+```rok
 int x = 10;
 i32 wrong = x;       // rejected
 i32 correct = (i32)x;
@@ -240,7 +240,7 @@ Literal range and sign validity are checked at compile time. The same contextual
 
 Binary operators require operands of the same type. Distinct typed operands are not implicitly promoted or converted:
 
-```rkc
+```rok
 i32 x = 10;
 i64 y = 20;
 i64 result = (i64)x + y;
@@ -286,7 +286,7 @@ generate such a visible method, but it must not change the no-implicit-copy rule
 
 RokC will use C-style qualifier placement for both const pointees and const pointer bindings:
 
-```rkc
+```rok
 const int* p;          // pointer to const int
 int const* q;          // same meaning
 int* const r = ...;    // const pointer to mutable int
@@ -300,7 +300,7 @@ The type system must represent these independently:
 
 Adding `const` to an otherwise matching type does not require a cast. A type mismatch still requires an explicit conversion:
 
-```rkc
+```rok
 int a = 5;
 i32 b = 10;
 

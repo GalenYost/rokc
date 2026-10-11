@@ -45,7 +45,7 @@ fn main() {
 ```
 
 **RokC** — takes C as a simplicity standard, goes even further:
-```rkc
+```rok
 import std.collections.HashMap;
 
 int main(void) {
@@ -62,7 +62,7 @@ them, this is exactly perfect to enforce strict rules, while maintaining flexibi
 A nice example of decorators is Zig, which can achieve similar results through compile-time metaprogramming.
 RokC uses the same comptime foundation, but wraps it in dedicated decorator syntax with type checking running downstream of them, which makes them more ergonomic and easier to reason about than raw metaprogramming.
 A few examples:
-```rkc
+```rok
 import std.tag; // existing in stdlib decorator
 import std.io.print;
 
@@ -84,7 +84,7 @@ int main(void) {
 This is perfect system for tagging functions, this will help with embeddability (such as game engines for example) and custom marking of functions, structs or even expressions
 
 Small example:
-```rkc
+```rok
 import std.meta.StructDecl;
 
 comptime StructDecl Serializable(StructDecl node) {
@@ -119,7 +119,7 @@ int main(void) {
 }
 ```
 Another example with functions:
-```rkc
+```rok
 import std.meta.FuncDecl;
 
 comptime FuncDecl Route(FuncDecl node, char* path) {
@@ -141,8 +141,8 @@ Instead you will have an std library decorators: Export and ExportAll. At first 
 ExportAll is module-wide decorator, such decorators apply to the whole file where they are being used, can be used in case of creating big type / constants declaration modules.
 Single Export as opposed can be used if you know you need this constant of function to be visible and usable from outside.
 Example:
-```rkc
-// state.rkc
+```rok
+// state.rok
 import std.ExportAll;
 @[ExportAll]
 

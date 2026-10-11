@@ -5,8 +5,8 @@ Status: Planned for 0.1.0
 The compiler accepts explicit source paths rather than relying on a hardcoded entry file.
 
 ```text
-rokc check source.rkc       # lex, parse, and semantically validate one file
-rokc dump-ast source.rkc    # print the formatted AST for debugging
+rokc check source.rok       # lex, parse, and semantically validate one file
+rokc dump-ast source.rok    # print the formatted AST for debugging
 rokc help
 rokc version
 ```

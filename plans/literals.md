@@ -4,7 +4,7 @@ Status: Planned for 0.1.0
 
 Supported forms:
 
-```rkc
+```rok
 255          // decimal
 0xff         // hexadecimal
 0b1111       // binary
@@ -18,7 +18,7 @@ Octal uses an explicit `0o` prefix; leading zero does not imply octal. Separator
 only between digits. Contextual destination typing and compile-time range checks apply to all
 integer bases. Contextual typing also applies when a literal is passed directly to a function:
 
-```rkc
+```rok
 void set_limit(u8 limit);
 
 set_limit(10);   // valid: 10 fits u8

@@ -7,7 +7,7 @@ Status: Planned for 0.1.0
 RokC enums are simple, fieldless, nominal sets of named constants. Members are always qualified
 through their enum type; unqualified member names are not introduced into the surrounding scope.
 
-```rkc
+```rok
 enum Color {
     Red,
     Green,

@@ -26,7 +26,7 @@ GUIDELINES.md      # This file
 LICENSE            # License and copyright information
 Makefile           # Build system (one command to build the project)
 README.md          # Project documentation, build instructions, and usage
-main.rkc            # Placeholder for a main file (if applicable)
+main.rok            # Placeholder for a main file (if applicable)
 nob.c              # Build system (defines constants, functions, and build logic)
 nob.h              # Build system header (defines API for the build system)
 ```

@@ -56,7 +56,7 @@ contextually typed literal may adopt the other branch's type when representable.
 The comma operator is included at the lowest precedence and is left-associative. It evaluates
 each operand from left to right and produces the value and type of the rightmost operand:
 
-```rkc
+```rok
 int result = (a += 1, a += 2);
 ```
 
@@ -67,7 +67,7 @@ to use a comma expression inside those comma-delimited constructs.
 
 The core language retains C-style unary and pointer operators:
 
-```rkc
+```rok
 int value = 10;
 int* pointer = &value;
 int copy = *pointer;

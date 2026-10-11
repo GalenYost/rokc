@@ -4,7 +4,7 @@ Status: Planned for 0.1.0
 
 String literals are immutable, null-terminated byte sequences:
 
-```rkc
+```rok
 const char* name = "Player1";
 ```
 
@@ -19,7 +19,7 @@ Character literals represent exactly one byte and use ordinary target `char` sem
 They may be contextually represented as `u8` when the destination explicitly requests an unsigned
 byte:
 
-```rkc
+```rok
 char letter = 'A';
 u8 byte = '\xff';
 ```
