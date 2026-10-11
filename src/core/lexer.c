@@ -440,27 +440,30 @@ static Token identify_keyword(Lexer *lex) {
 static Token identify_number(Lexer *lex) {
     TokenType type = TOKEN_INT;
 
-    while (is_digit(lexer_peek(lex))) {
+    while (lexer_peek(lex) == '_' || is_digit(lexer_peek(lex))) {
         lexer_advance(lex);
     }
 
     if (lexer_peek(lex) == '.' && is_digit(lexer_peek_next(lex))) {
         type = TOKEN_FLOAT;
+
         lexer_advance(lex);
 
-        while (is_digit(lexer_peek(lex))) {
+        while (lexer_peek(lex) == '_' || is_digit(lexer_peek(lex))) {
             lexer_advance(lex);
         }
     }
+
+    StringStream ss = {
+        .data = (char*)lex->start,
+        .len = (size_t)(lex->current - lex->start)
+    };
 
     Token t = {
         .type = type,
         .line = lex->line,
         .col = lex->col,
-    };
-    t.view = (StringStream){
-        .data = (char*)lex->start,
-        .len = (size_t)(lex->current - lex->start)
+        .view = sstream_remove(lex->arena, ss, '_'),
     };
 
     return t;
