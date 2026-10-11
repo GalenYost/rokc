@@ -6,14 +6,25 @@
 
 #include <stdio.h>
 
-int main(void) {
-    const char *file_path = "main.vz";
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        LOG(FATAL, "Source file name is required");
+        exit(1);
+    }
+
+    const char *file_path = argv[1];
     StringStream ss = read_file(file_path);
 
     Arena a = arena_new(1024*1024);
     Arena format_arena = arena_new(1024);
     Lexer lex = lexer_new(ss, &a);
     Parser p = parser_new(&lex, &a, file_path);
+
+    // Token cur = lexer_next(&lex);
+    // while (cur.type != TOKEN_UNKNOWN && cur.type != TOKEN_EOF) {
+    //     printf("%s\n", format_token(&a, cur));
+    //     cur = lexer_next(&lex);
+    // }
 
     Node *cur = parser_next(&p);
     while (cur) {
