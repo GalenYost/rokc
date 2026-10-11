@@ -1,6 +1,6 @@
-# Arqis Grammar
+# RokC Grammar
 
-This document is the complete EBNF grammar for the Arqis language as designed for the core
+This document is the complete EBNF grammar for the RokC language as designed for the core
 release (0.1.0). It incorporates the design decisions recorded in the current language plans.
 Rules marked `[reserved]` are future-feature syntax that the compiler must
 diagnose as unsupported in this release rather than treating the token as an identifier.

@@ -1,7 +1,7 @@
-# Arqis 0.1.0 TODO
+# RokC 0.1.0 TODO
 
 This checklist tracks implementation work for the 0.1.0 front-end release. The release must
-process a single `.qis` source file, validate it, and report useful diagnostics; native executable
+process a single `.rkc` source file, validate it, and report useful diagnostics; native executable
 generation is deferred to 0.2.0.
 
 ## Lexer and tokens
@@ -38,9 +38,9 @@ generation is deferred to 0.2.0.
 
 - [ ] Add structured diagnostics with source spans, notes, and severity.
 - [ ] Distinguish recoverable source errors from fatal/internal compiler errors.
-- [ ] Implement `arqis check <source.qis>`.
-- [ ] Implement `arqis dump-ast <source.qis>`.
-- [ ] Implement `arqis help` and `arqis version`.
+- [ ] Implement `rokc check <source.rkc>`.
+- [ ] Implement `rokc dump-ast <source.rkc>`.
+- [ ] Implement `rokc help` and `rokc version`.
 - [ ] Remove hardcoded source-file assumptions.
 
 ## Tests
@@ -54,6 +54,6 @@ generation is deferred to 0.2.0.
 ## Release gate
 
 - [ ] `make build` succeeds without new warnings.
-- [ ] Valid 0.1 programs pass `arqis check`.
+- [ ] Valid 0.1 programs pass `rokc check`.
 - [ ] Invalid programs fail with useful diagnostics and nonzero status.
 - [ ] Every 0.1 grammar rule has parser and test coverage.

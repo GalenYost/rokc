@@ -2,7 +2,7 @@
 
 Status: Planned for 0.1.0
 
-Arqis evaluates ordinary expressions deterministically from left to right. This is a deliberate
+RokC evaluates ordinary expressions deterministically from left to right. This is a deliberate
 departure from C's unspecified operand order and is intended to make side effects portable and
 debuggable without changing the language's C-like syntax or unsafe memory model.
 
@@ -56,7 +56,7 @@ contextually typed literal may adopt the other branch's type when representable.
 The comma operator is included at the lowest precedence and is left-associative. It evaluates
 each operand from left to right and produces the value and type of the rightmost operand:
 
-```qis
+```rkc
 int result = (a += 1, a += 2);
 ```
 
@@ -67,7 +67,7 @@ to use a comma expression inside those comma-delimited constructs.
 
 The core language retains C-style unary and pointer operators:
 
-```qis
+```rkc
 int value = 10;
 int* pointer = &value;
 int copy = *pointer;
@@ -139,7 +139,7 @@ increment runs after the body and before the next condition. `while` also checks
 before each iteration. `continue` targets the nearest loop (the increment in a `for`, the next
 condition check in a `while`), while `break` exits the nearest loop or switch.
 
-Arqis also supports C-compatible `do`/`while`: the body executes once before its condition is
+RokC also supports C-compatible `do`/`while`: the body executes once before its condition is
 checked, `continue` proceeds to the condition, `break` exits the loop, and the trailing
 semicolon is required. The lexer/parser implementation of the `do` keyword remains pending.
 
@@ -172,7 +172,7 @@ temporaries, `const` bindings, and read-only pointees are not assignable. Assign
 right-associative and yields the stored value, so `a = b = 5` is valid. Compound assignments
 evaluate the destination once before applying the operation. Struct, union, and fixed-array
 assignment are rejected unless an explicitly defined copy/move operation is invoked; all other
-assignment conversions obey Arqis's strict conversion rules.
+assignment conversions obey RokC's strict conversion rules.
 
 ## Comparisons
 

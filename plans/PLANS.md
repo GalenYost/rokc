@@ -1,4 +1,4 @@
-# Arqis Plans
+# RokC Plans
 
 This directory contains future, experimental, and unscheduled language ideas. Nothing here is part of the current language contract unless it is moved into a release specification.
 

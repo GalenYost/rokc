@@ -2,10 +2,10 @@
 
 Status: Planned for 0.1.0
 
-Arqis uses lexical block scopes. A declaration in an inner block may shadow a declaration with
+RokC uses lexical block scopes. A declaration in an inner block may shadow a declaration with
 the same name in an outer block:
 
-```qis
+```rkc
 int value = 1;
 {
     int value = 2;
@@ -17,7 +17,7 @@ print(value); // 1
 Name lookup resolves the nearest visible binding. Duplicate declarations in the same scope are
 rejected. A local binding ends at its scope's closing brace.
 
-Arqis has no user-declared namespace blocks or C++-style `namespace` construct. Modules provide the
+RokC has no user-declared namespace blocks or C++-style `namespace` construct. Modules provide the
 only qualified naming boundary. Within a scope or module, types, functions, variables, constants,
 and enum type names share one collision-checked declaration space.
 
@@ -27,7 +27,7 @@ before the first release is complete.
 
 Functions used before their definitions require explicit C-style prototypes:
 
-```qis
+```rkc
 int add(int, int);
 int main() { return add(1, 2); }
 int add(int left, int right) { return left + right; }
@@ -35,7 +35,7 @@ int add(int left, int right) { return left + right; }
 
 Prototype parameter names are optional, matching C:
 
-```qis
+```rkc
 int add(int, int);
 int add(int left, int right);
 ```

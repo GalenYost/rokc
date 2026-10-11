@@ -21,7 +21,7 @@ responsibility.
 
 Fresh construction and explicitly authored clone methods are valid:
 
-```qis
+```rkc
 Point point = Point.new(10, 20);
 Point copy = point.clone();
 ```
@@ -32,9 +32,9 @@ implicit copying.
 
 ## Member access
 
-Arqis uses only `.` for struct member access. The C-style `->` operator is intentionally omitted:
+RokC uses only `.` for struct member access. The C-style `->` operator is intentionally omitted:
 
-```qis
+```rkc
 Point point;
 Point* pointer;
 
@@ -55,7 +55,7 @@ or explicitly aligned layouts require a future attribute or layout mechanism.
 
 Recursive structs use explicit C-style incomplete declarations when needed:
 
-```qis
+```rkc
 struct Node;
 struct Node { int value; Node* next; };
 ```
@@ -69,7 +69,7 @@ ordering requirement.
 Structs use C-style positional and designated initializers, but partial initialization is not
 allowed by default:
 
-```qis
+```rkc
 Point point = { .x = 10, .y = 20 };
 ```
 
@@ -82,7 +82,7 @@ Defaults are intended to be compile-time-resolvable initially. Future `comptime`
 permit more expressive calculations, but the syntax must distinguish a runtime field with a
 compile-time-computed default from a compile-time-only field.
 
-```qis
+```rkc
 struct Player {
     int health;
 
@@ -124,13 +124,13 @@ struct Player {
 Member-call syntax is provided as syntax sugar when the declared function has a compatible pointer
 receiver:
 
-```qis
+```rkc
 p.to_json();
 ```
 
 would correspond to something like:
 
-```qis
+```rkc
 Player.to_json(&p);
 ```
 
@@ -148,7 +148,7 @@ postponed until a concrete need justifies their additional grammar and lookup ru
 
 Fields may declare default expressions directly in the struct definition:
 
-```qis
+```rkc
 struct Player {
     int health = 100;
     int mana = 50;

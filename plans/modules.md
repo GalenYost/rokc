@@ -4,21 +4,21 @@ Status: Syntax in 0.1.0; resolution and cross-file semantics in 0.2.0
 
 ## Import model
 
-Arqis imports follow the Java/Rust idea of either binding a specific leaf or binding a module namespace. Arqis uses `.` as the path separator:
+RokC imports follow the Java/Rust idea of either binding a specific leaf or binding a module namespace. RokC uses `.` as the path separator:
 
-```qis
+```rkc
 import std.collections.HashMap;
 
 HashMap.new();
 ```
 
-```qis
+```rkc
 import std.collections;
 
 collections.HashMap.new();
 ```
 
-```qis
+```rkc
 import std;
 
 std.collections.HashMap.new();
@@ -33,11 +33,11 @@ The final path component is bound in the local namespace. The resolver determine
   namespace blocks.
 - Module paths are resolved from a configured project/package source root.
 - Relative imports such as `./utils` are not supported initially.
-- A source file such as `src/core/parser.qis` is imported as `core.parser` from that source root.
+- A source file such as `src/core/parser.rkc` is imported as `core.parser` from that source root.
 - A declaration inside it may be imported as `core.parser.Parser`.
 - Importing a module binds its final path component as a namespace:
 
-  ```qis
+  ```rkc
   import core.parser;
 
   parser.Parser value;
@@ -45,7 +45,7 @@ The final path component is bound in the local namespace. The resolver determine
 
 - Importing a declaration binds that declaration directly:
 
-  ```qis
+  ```rkc
   import core.parser.Parser;
 
   Parser value;
@@ -53,7 +53,7 @@ The final path component is bound in the local namespace. The resolver determine
 
 - Imports may use an explicit `as` alias when a shorter or collision-free local name is desired:
 
-  ```qis
+  ```rkc
   import core.parser as parser_impl;
   import other.parser as parser_api;
   ```
@@ -75,7 +75,7 @@ enums.
 
 Examples of the intended distinction:
 
-```qis
+```rkc
 comptime const int EVAL_INT = 5 + 8 * 2;
 const int INT_VAR = 21;
 ```
@@ -87,7 +87,7 @@ fixed-array bound.
 
 The intended forms are:
 
-```qis
+```rkc
 comptime int count = 5 + 5;
 int other_count = 0;
 ```

@@ -1,14 +1,14 @@
-# Arqis
+# RokC
 
-Arqis is a fast, statically typed, compiled programming language with C-like syntax and a
+RokC is a fast, statically typed, compiled programming language with C-like syntax and a
 deliberately simple, unsafe memory model.
 
 ## Quick facts
 
 | Property | Value |
 |----------|-------|
-| **Name** | Arqis |
-| **Extension** | `.qis` |
+| **Name** | RokC |
+| **Extension** | `.rkc` |
 | **Syntax** | Mostly C — simple, transparent, nothing hidden or abstracted away |
 
 ## Key language features
@@ -38,7 +38,7 @@ single-file programs and reports useful diagnostics. Native executable generatio
 
 ```text
 src/
-  main.c            entry point (hardcoded to main.qis — to be replaced with CLI)
+  main.c            entry point (hardcoded to main.rkc — to be replaced with CLI)
   core/
     lexer.c         token model and lexical analysis
     parser.c        partial parser (import, struct, enum, type only)

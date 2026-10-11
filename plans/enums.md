@@ -4,10 +4,10 @@ Status: Planned for 0.1.0
 
 ## Model
 
-Arqis enums are simple, fieldless, nominal sets of named constants. Members are always qualified
+RokC enums are simple, fieldless, nominal sets of named constants. Members are always qualified
 through their enum type; unqualified member names are not introduced into the surrounding scope.
 
-```qis
+```rkc
 enum Color {
     Red,
     Green,
@@ -30,7 +30,7 @@ Enums do not support, in the initial design:
 
 The compiler still needs an internal representation for storage, comparison, switching, and ABI lowering. That representation is an implementation detail unless a later ABI feature explicitly exposes it.
 
-For the initial implementation, every enum uses a fixed 32-bit representation. This gives the compiler and backend a simple, predictable layout while keeping the representation hidden from normal Arqis code.
+For the initial implementation, every enum uses a fixed 32-bit representation. This gives the compiler and backend a simple, predictable layout while keeping the representation hidden from normal RokC code.
 
 Variants receive compiler-internal ordinal values in declaration order. The first declared variant is ordinal zero and is therefore the default value produced by zero-initialization.
 

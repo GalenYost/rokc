@@ -1,17 +1,17 @@
-# Vise Language Features
+# RokC Language Features
 
 ### Clarifications on OOP
-OOP should be simple, it shouldnt complicate things, especially taking the fact that OOP is not necessary, so in Vise theres no inheritance, no private fields, just pure structs that contain fields and functions.
+OOP should be simple, it shouldnt complicate things, especially taking the fact that OOP is not necessary, so in RokC theres no inheritance, no private fields, just pure structs that contain fields and functions.
 If you want to inherit something - you can attach decorator to a struct, this way you can have a struct that can be used as sort of a "template" for your future structs that will use that exact decorator as a strict path to follow
 
 ### Clarifications on build scripts
 There are rust and zig as good examples of how build scripts should work, but in my opinion they are a bit more complicated, it feels like learning yet another part of the language.
-Vise build system will allow you to simply define what you want from a compiler
+RokC build system will allow you to simply define what you want from a compiler
 
 ### Clarifications on std library
 
 A language should be self-explorable — you shouldn't need documentation just to figure out what a name means.
-Instead of huge files like in C/C++ or long complicated names like in Java, Vise uses simple, self-explanatory module paths.
+Instead of huge files like in C/C++ or long complicated names like in Java, RokC uses simple, self-explanatory module paths.
 
 #### Examples
 
@@ -44,8 +44,8 @@ fn main() {
 }
 ```
 
-**Vise** — takes C as a simplicity standard, goes even further:
-```vz
+**RokC** — takes C as a simplicity standard, goes even further:
+```rkc
 import std.collections.HashMap;
 
 int main(void) {
@@ -53,16 +53,16 @@ int main(void) {
 }
 ```
 
-Vise combines the simplicity of C, the modern readability of Java, and the self-explanatory naming of Rust.
+RokC combines the simplicity of C, the modern readability of Java, and the self-explanatory naming of Rust.
 
 ### Clarifications on decorators
 Basically decorators are macros in a way, but they operate on nodes, not strings, and the type checker runs downstream of
 them, this is exactly perfect to enforce strict rules, while maintaining flexibility of concept as it is.
 
 A nice example of decorators is Zig, which can achieve similar results through compile-time metaprogramming.
-Vise uses the same comptime foundation, but wraps it in dedicated decorator syntax with type checking running downstream of them, which makes them more ergonomic and easier to reason about than raw metaprogramming.
+RokC uses the same comptime foundation, but wraps it in dedicated decorator syntax with type checking running downstream of them, which makes them more ergonomic and easier to reason about than raw metaprogramming.
 A few examples:
-```vz
+```rkc
 import std.tag; // existing in stdlib decorator
 import std.io.print;
 
@@ -84,7 +84,7 @@ int main(void) {
 This is perfect system for tagging functions, this will help with embeddability (such as game engines for example) and custom marking of functions, structs or even expressions
 
 Small example:
-```vz
+```rkc
 import std.meta.StructDecl;
 
 comptime StructDecl Serializable(StructDecl node) {
@@ -119,7 +119,7 @@ int main(void) {
 }
 ```
 Another example with functions:
-```vz
+```rkc
 import std.meta.FuncDecl;
 
 comptime FuncDecl Route(FuncDecl node, char* path) {
@@ -141,8 +141,8 @@ Instead you will have an std library decorators: Export and ExportAll. At first 
 ExportAll is module-wide decorator, such decorators apply to the whole file where they are being used, can be used in case of creating big type / constants declaration modules.
 Single Export as opposed can be used if you know you need this constant of function to be visible and usable from outside.
 Example:
-```vz
-// state.vz
+```rkc
+// state.rkc
 import std.ExportAll;
 @[ExportAll]
 

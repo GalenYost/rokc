@@ -4,7 +4,7 @@ Status: Planned for 0.1.0
 
 ## Primitive type direction
 
-Arqis will provide both a target-native default integer and explicit-width integer types:
+RokC will provide both a target-native default integer and explicit-width integer types:
 
 ```text
 int  // signed integer whose width follows the compilation target
@@ -16,7 +16,7 @@ The explicit integer forms are intended to lower directly to the compiler IR/bac
 
 `int` should be represented internally as the target’s native signed integer type. Its width, range, alignment, overflow behavior, and ABI representation must be documented per target.
 
-Arqis will follow Zig’s integer model for explicit-width integers:
+RokC will follow Zig’s integer model for explicit-width integers:
 
 - signed integers use two’s-complement representation
 - `iN` and `uN` support arbitrary positive widths up to 65535 bits
@@ -62,7 +62,7 @@ this does not establish a general implicit conversion between `char` and `u8` ex
 
 `bool` is a logical type with canonical representation values `0` and `1`:
 
-```qis
+```rkc
 bool enabled = true;
 bool disabled = false;
 ```
@@ -71,7 +71,7 @@ The only boolean literals are `true` and `false`. Numeric literals `0` and `1` r
 
 Conditions are strictly boolean. Control-flow conditions and logical operators do not implicitly convert integers or pointers to `bool`:
 
-```qis
+```rkc
 if (count != 0) { ... }
 if (ptr != null) { ... }
 ```
@@ -82,7 +82,7 @@ Expressions such as `if (count)` and `if (ptr)` are rejected unless an explicit 
 
 Pointers are nullable by definition. Conceptually, `T*` behaves like a pointer to `T` plus a null state, but users do not write an explicit union type for it:
 
-```qis
+```rkc
 Player* player = null;
 ```
 
@@ -92,7 +92,7 @@ Rules:
 - `null` is not an integer literal and `0` is not implicitly assignable to a pointer.
 - `Player* p = 0` is rejected unless an explicit conversion is added later.
 - Pointer comparisons with `null` produce `bool`.
-- Dereferencing a null pointer remains invalid behavior under Arqis’s intentionally unsafe memory model.
+- Dereferencing a null pointer remains invalid behavior under RokC’s intentionally unsafe memory model.
 - `null` is not assignable to integers, structs, enums, or booleans.
 
 The compiler may use an internal null type for literal checking, but `null` is not intended to be a general user-declarable standalone type.
@@ -101,7 +101,7 @@ The compiler may use an internal null type for literal checking, but `null` is n
 
 The core syntax distinguishes fixed-size arrays from raw pointers:
 
-```qis
+```rkc
 int[4] values = { 1, 2, 3, 4 };
 int* pointer = values; // implicit decay to &values[0]
 ```
@@ -122,7 +122,7 @@ global zero-initialization rule.
 
 Fixed arrays compose into multidimensional arrays:
 
-```qis
+```rkc
 int[3][4] matrix;
 matrix[1][2] = 7;
 ```
@@ -132,7 +132,7 @@ Nested arrays are contiguous in row-major order. Decay applies to the outermost 
 
 `sizeof` preserves the array object before decay, following C:
 
-```qis
+```rkc
 int[4] values;
 int* pointer = values;
 
@@ -144,7 +144,7 @@ For a VLA, `sizeof` uses its runtime bound and returns a runtime `usize`.
 
 Variable-length arrays are also part of the core language:
 
-```qis
+```rkc
 void process(int count) {
     int[count] values;
 }
@@ -174,13 +174,13 @@ shares the original storage and never copies it.
 
 `void` represents the absence of a value and is initially valid only as a function return type:
 
-```qis
+```rkc
 void log_message(char* message) {
     // no return value
 }
 ```
 
-`void*` is not a valid Arqis type. Generic functions and typed containers are the intended replacement for type-erased APIs. Raw byte-oriented APIs should use explicit types such as `u8*` together with a length. If C interoperability later requires untyped ABI pointers, that should be handled by an explicit FFI/opaque boundary rather than by making `void*` a normal language type.
+`void*` is not a valid RokC type. Generic functions and typed containers are the intended replacement for type-erased APIs. Raw byte-oriented APIs should use explicit types such as `u8*` together with a length. If C interoperability later requires untyped ABI pointers, that should be handled by an explicit FFI/opaque boundary rather than by making `void*` a normal language type.
 
 ## Pointer arithmetic
 
@@ -205,7 +205,7 @@ Integer-width, signedness, integer/float, pointer/pointer, pointer/integer, and 
 
 The initial cast syntax is C-style:
 
-```qis
+```rkc
 i64 wider = (i64)value;
 float ratio = (float)count;
 ```
@@ -216,7 +216,7 @@ Because this syntax overlaps with parenthesized expressions, parsing `(Type)expr
 
 Unsuffixed numeric literals are compile-time values without a fixed runtime type. Their destination declaration may choose the type when the value is representable:
 
-```qis
+```rkc
 int x = 10;
 i32 y = 10;
 u8 z = 255;
@@ -224,7 +224,7 @@ u8 z = 255;
 
 This exception applies to literals, not to already-typed expressions:
 
-```qis
+```rkc
 int x = 10;
 i32 wrong = x;       // rejected
 i32 correct = (i32)x;
@@ -240,7 +240,7 @@ Literal range and sign validity are checked at compile time. The same contextual
 
 Binary operators require operands of the same type. Distinct typed operands are not implicitly promoted or converted:
 
-```qis
+```rkc
 i32 x = 10;
 i64 y = 20;
 i64 result = (i64)x + y;
@@ -284,9 +284,9 @@ generate such a visible method, but it must not change the no-implicit-copy rule
 
 ## Const qualification
 
-Arqis will use C-style qualifier placement for both const pointees and const pointer bindings:
+RokC will use C-style qualifier placement for both const pointees and const pointer bindings:
 
-```qis
+```rkc
 const int* p;          // pointer to const int
 int const* q;          // same meaning
 int* const r = ...;    // const pointer to mutable int
@@ -300,7 +300,7 @@ The type system must represent these independently:
 
 Adding `const` to an otherwise matching type does not require a cast. A type mismatch still requires an explicit conversion:
 
-```qis
+```rkc
 int a = 5;
 i32 b = 10;
 
@@ -313,7 +313,7 @@ For pointers, adding pointee constness is likewise allowed when the pointed-to t
 
 ## `sizeof`
 
-Arqis provides C-style `sizeof(Type)` and `sizeof(expression)`. The result is a compile-time
+RokC provides C-style `sizeof(Type)` and `sizeof(expression)`. The result is a compile-time
 unsigned target-sized value such as `usize`; the expression form does not evaluate its operand.
 `sizeof(char)` is always `1`, struct sizes include padding/alignment, pointer sizes depend on the
 target, and function types cannot be sized. Zero-sized types remain open. The lexer/parser still
