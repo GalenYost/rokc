@@ -136,6 +136,63 @@ static char *vfmt(Arena *a, const char *fmt, ...) {
     return result;
 }
 
+static void format_token_literal_bytes(FormatBuffer *b, StringStream view,
+                                       bool escape_quotes, bool escape_backslashes) {
+    for (size_t i = 0; view.data && i < view.len; i++) {
+        unsigned char c = (unsigned char)view.data[i];
+        const char *escape = NULL;
+
+        switch (c) {
+            case '\n': escape = "\\n"; break;
+            case '\r': escape = "\\r"; break;
+            case '\t': escape = "\\t"; break;
+            case '\0': escape = "\\0"; break;
+            case '\\':
+                if (escape_backslashes) escape = "\\\\";
+                break;
+            case '"':
+                if (escape_quotes) escape = "\\\"";
+                break;
+        }
+
+        if (escape) {
+            format_buffer_append(b, escape);
+        } else if (c < 0x20 || c == 0x7f) {
+            format_buffer_append_fmt(b, "\\x%02x", c);
+        } else {
+            char byte = (char)c;
+            format_buffer_append_n(b, &byte, 1);
+        }
+    }
+}
+
+static char *format_literal_token(Arena *a, Token t, const char *name) {
+    FormatBuffer b = {0};
+    format_buffer_append_fmt(&b, "%zu:%zu : %s(", t.line, t.col, name);
+
+    if (t.type == TOKEN_LIT_STR) {
+        format_buffer_append(&b, "\"");
+        format_token_literal_bytes(&b, t.view, true, true);
+        format_buffer_append(&b, "\"");
+    } else {
+        // Character token views still contain their source quotes and escape spelling.
+        // Escape literal control bytes for display, while preserving source backslashes.
+        format_token_literal_bytes(&b, t.view, false, false);
+    }
+    format_buffer_append(&b, ")");
+
+    char *result = NULL;
+    if (!b.failed) {
+        result = (char *)arena_alloc(a, b.len + 1);
+        if (result) {
+            memcpy(result, b.data, b.len);
+            result[b.len] = '\0';
+        }
+    }
+    format_buffer_free(&b);
+    return result;
+}
+
 StringStream sstream_new(char *str) {
     return (StringStream) {
         .data = str,
@@ -376,6 +433,10 @@ char *format_token(Arena *a, Token t) {
     };
 
     if (t.type >= TOKEN_PLUS && t.type < TOKEN_COUNT && words[t.type]) {
+        if (t.type == TOKEN_LIT_STR || t.type == TOKEN_LIT_CHAR) {
+            return format_literal_token(a, t, words[t.type]);
+        }
+
         return vfmt(a, "%zu:%zu : %s(%.*s)",
                     t.line, t.col, words[t.type], (int)t.view.len,
                     t.view.data ? t.view.data : "");
