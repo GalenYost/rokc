@@ -17,6 +17,7 @@ typedef struct Node Node;
 typedef struct DataType DataType;
 
 StringStream sstream_new(char *str);
+StringStream sstream_remove(Arena *a, StringStream ss, char c);
 
 StringStream sstream_dump(Arena *a, StringStream ss);
 char *sstream_to_cstr(Arena *a, StringStream ss);

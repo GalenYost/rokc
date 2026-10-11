@@ -143,6 +143,24 @@ StringStream sstream_new(char *str) {
     };
 }
 
+StringStream sstream_remove(Arena *a, StringStream ss, char c) {
+    char *view = arena_alloc(a, ss.len);
+
+    unsigned i = 0;
+    unsigned next_i = 0;
+    while (i < ss.len) {
+        char cur = ss.data[i];
+        if (cur != c) {
+            view[next_i] = cur;
+            next_i++;
+        }
+        i++;
+    }
+
+    StringStream new_ss = sstream_new(view);
+    return new_ss;
+}
+
 StringStream sstream_dump(Arena *a, StringStream ss) {
     char *dest = (char *)arena_alloc(a, ss.len);
     memcpy(dest, ss.data, ss.len);
@@ -493,7 +511,6 @@ static void format_node_one(FormatBuffer *b, Arena *scratch, Node *n, size_t ind
             format_node_chain(b, scratch, n->as.func_decl.params, indent + 2);
             format_node_field(b, scratch, indent + 1, "body", n->as.func_decl.body);
             format_buffer_indent(b, indent + 1);
-            format_buffer_append_fmt(b, "is_comptime: %s\n", format_bool(n->as.func_decl.is_comptime));
             break;
 
         case NODE_STRUCT_DECL:
