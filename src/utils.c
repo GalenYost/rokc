@@ -144,10 +144,15 @@ StringStream sstream_new(char *str) {
 }
 
 StringStream sstream_remove(Arena *a, StringStream ss, char c) {
-    char *view = arena_alloc(a, ss.len);
+    if (!a || (!ss.data && ss.len != 0) || ss.len == SIZE_MAX) {
+        return (StringStream){0};
+    }
 
-    unsigned i = 0;
-    unsigned next_i = 0;
+    char *view = (char *)arena_alloc(a, ss.len + 1);
+    if (!view) return (StringStream){0};
+
+    size_t i = 0;
+    size_t next_i = 0;
     while (i < ss.len) {
         char cur = ss.data[i];
         if (cur != c) {
@@ -157,8 +162,11 @@ StringStream sstream_remove(Arena *a, StringStream ss, char c) {
         i++;
     }
 
-    StringStream new_ss = sstream_new(view);
-    return new_ss;
+    view[next_i] = '\0';
+    return (StringStream){
+        .data = view,
+        .len = next_i,
+    };
 }
 
 StringStream sstream_dump(Arena *a, StringStream ss) {
