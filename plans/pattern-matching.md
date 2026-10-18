@@ -2,12 +2,12 @@
 
 Status: Planned for 0.1.0 (switch expressions); richer patterns later
 
-Arqis supports value-producing switch expressions with implicit arm values:
+RokC supports value-producing switch expressions with implicit arm values:
 
-```qis
+```rok
 const int player_health_mult = switch (player.class) {
-    case "one": 1;
-    case "two": 2;
+    case PlayerClass.Warrior: 3;
+    case PlayerClass.Mage: 2;
     default: 1;
 };
 ```

@@ -2,7 +2,7 @@
 
 Status: Planned for 0.1.0
 
-Arqis evaluates ordinary expressions deterministically from left to right. This is a deliberate
+RokC evaluates ordinary expressions deterministically from left to right. This is a deliberate
 departure from C's unspecified operand order and is intended to make side effects portable and
 debuggable without changing the language's C-like syntax or unsafe memory model.
 
@@ -29,26 +29,24 @@ Operators shared with C use the following precedence, from highest to lowest:
 
 1. postfix calls, indexing, and member access
 2. parenthesized grouping
-3. exponentiation `**`, right-associative
-4. unary operators (`!`, `~`, unary `+`/`-`, prefix `++`/`--`)
-5. `*`, `/`, `%`
-6. `+`, `-`
-7. `<<`, `>>`
-8. `<`, `<=`, `>`, `>=`
-9. `==`, `!=`
-10. bitwise `&`
-11. bitwise `^`
-12. bitwise `|`
-13. logical `&&`
-14. logical `||`
-15. conditional `?:`, if enabled
-16. assignment and compound assignment, right-associative
-17. comma operator, if enabled
+3. unary operators (`!`, `~`, unary `+`/`-`, prefix `++`/`--`)
+4. `*`, `/`, `%`
+5. `+`, `-`
+6. `<<`, `>>`
+7. `<`, `<=`, `>`, `>=`
+8. `==`, `!=`
+9. bitwise `&`
+10. bitwise `^`
+11. bitwise `|`
+12. logical `&&`
+13. logical `||`
+14. conditional `?:`, if enabled
+15. assignment and compound assignment, right-associative
+16. comma operator, if enabled
 
-The lexer currently also recognizes `**`, which is not a C operator. Arqis treats it as
-mathematical exponentiation: it binds more tightly than unary operators and associates
-right-to-left. Commas used only to separate arguments or initializer items are separators, not
-necessarily comma operators.
+Exponentiation is not a 0.1 core operator. A future standard-library operation or language
+revision may define it after integer and floating-point behavior are specified. Commas used only
+to separate arguments or initializer items are separators, not necessarily comma operators.
 
 The conditional operator `?:` is included between logical OR and assignment. It is
 right-associative. Its condition must be `bool`; the condition is evaluated first and only the
@@ -58,7 +56,7 @@ contextually typed literal may adopt the other branch's type when representable.
 The comma operator is included at the lowest precedence and is left-associative. It evaluates
 each operand from left to right and produces the value and type of the rightmost operand:
 
-```qis
+```rok
 int result = (a += 1, a += 2);
 ```
 
@@ -69,7 +67,7 @@ to use a comma expression inside those comma-delimited constructs.
 
 The core language retains C-style unary and pointer operators:
 
-```qis
+```rok
 int value = 10;
 int* pointer = &value;
 int copy = *pointer;
@@ -141,7 +139,7 @@ increment runs after the body and before the next condition. `while` also checks
 before each iteration. `continue` targets the nearest loop (the increment in a `for`, the next
 condition check in a `while`), while `break` exits the nearest loop or switch.
 
-Arqis also supports C-compatible `do`/`while`: the body executes once before its condition is
+RokC also supports C-compatible `do`/`while`: the body executes once before its condition is
 checked, `continue` proceeds to the condition, `break` exits the loop, and the trailing
 semicolon is required. The lexer/parser implementation of the `do` keyword remains pending.
 
@@ -174,7 +172,7 @@ temporaries, `const` bindings, and read-only pointees are not assignable. Assign
 right-associative and yields the stored value, so `a = b = 5` is valid. Compound assignments
 evaluate the destination once before applying the operation. Struct, union, and fixed-array
 assignment are rejected unless an explicitly defined copy/move operation is invoked; all other
-assignment conversions obey Arqis's strict conversion rules.
+assignment conversions obey RokC's strict conversion rules.
 
 ## Comparisons
 
@@ -186,10 +184,10 @@ IEEE behavior, including `NaN`. Logical operators accept only `bool`.
 
 ## Local initialization
 
-Locals may omit initializers, but every read must be preceded by a compiler-proven write on that
-control-flow path. Reads of possibly uninitialized locals are compile-time errors. Definite
-assignment does not track arbitrary pointer aliases or prove memory safety; those remain under
-the programmer's control. Global variables use the separately defined zero-initialization rule.
+Locals may omit initializers and retain C-like indeterminate contents. The core compiler does not
+perform definite-assignment analysis or require an `uninit` marker. Reading an indeterminate local
+is invalid program behavior and remains the programmer's responsibility. Global variables without
+initializers are zero-initialized.
 
 Explicit panic is provided by the runtime/standard library rather than core syntax. A future
 `noreturn` declaration attribute will allow return-path analysis to recognize non-returning

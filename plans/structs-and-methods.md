@@ -21,7 +21,7 @@ responsibility.
 
 Fresh construction and explicitly authored clone methods are valid:
 
-```qis
+```rok
 Point point = Point.new(10, 20);
 Point copy = point.clone();
 ```
@@ -32,9 +32,9 @@ implicit copying.
 
 ## Member access
 
-Arqis uses only `.` for struct member access. The C-style `->` operator is intentionally omitted:
+RokC uses only `.` for struct member access. The C-style `->` operator is intentionally omitted:
 
-```qis
+```rok
 Point point;
 Point* pointer;
 
@@ -55,7 +55,7 @@ or explicitly aligned layouts require a future attribute or layout mechanism.
 
 Recursive structs use explicit C-style incomplete declarations when needed:
 
-```qis
+```rok
 struct Node;
 struct Node { int value; Node* next; };
 ```
@@ -69,7 +69,7 @@ ordering requirement.
 Structs use C-style positional and designated initializers, but partial initialization is not
 allowed by default:
 
-```qis
+```rok
 Point point = { .x = 10, .y = 20 };
 ```
 
@@ -82,7 +82,7 @@ Defaults are intended to be compile-time-resolvable initially. Future `comptime`
 permit more expressive calculations, but the syntax must distinguish a runtime field with a
 compile-time-computed default from a compile-time-only field.
 
-```qis
+```rok
 struct Player {
     int health;
 
@@ -124,13 +124,13 @@ struct Player {
 Member-call syntax is provided as syntax sugar when the declared function has a compatible pointer
 receiver:
 
-```qis
+```rok
 p.to_json();
 ```
 
 would correspond to something like:
 
-```qis
+```rok
 Player.to_json(&p);
 ```
 
@@ -141,6 +141,27 @@ The exact receiver matching rules, const qualification, and value-receiver behav
 There is no special constructor or `new` syntax. Type-namespace functions are ordinary user-
 defined functions; `new`, `from_default`, or any other name is purely a convention and does not
 implicitly allocate or initialize hidden state.
+
+For 0.1, method declarations and definitions remain inside the containing struct. Out-of-struct
+qualified definitions such as `void Player.heal(...)` are a secondary organization feature and are
+postponed until a concrete need justifies their additional grammar and lookup rules.
+
+Fields may declare default expressions directly in the struct definition:
+
+```rok
+struct Player {
+    int health = 100;
+    int mana = 50;
+};
+
+Player player = { .health = 75 }; // mana uses its default of 50
+```
+
+During aggregate initialization, an omitted field uses its declared default. A field without a
+default must be supplied explicitly, either positionally or with a designator. Duplicate or
+unknown designators, positional values after a designator, incompatible values, and excess values
+are compile-time errors. In 0.1, default expressions must be compile-time-resolvable; more
+expressive runtime defaults can be considered alongside future `comptime` support.
 
 ## Call forms
 
@@ -158,6 +179,5 @@ single-dot member access must resolve unambiguously.
 
 ## Open questions
 
-- What syntax and evaluation rules define default field values?
 - What explicit API or decorator convention should generate clone/copy methods?
 - How should a future C-ABI layout attribute interact with struct methods and fixed-array fields?

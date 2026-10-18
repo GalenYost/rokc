@@ -4,9 +4,10 @@ Status: Planned for 0.1.0
 
 ## Model
 
-Arqis enums are simple, fieldless, nominal sets of named constants.
+RokC enums are simple, fieldless, nominal sets of named constants. Members are always qualified
+through their enum type; unqualified member names are not introduced into the surrounding scope.
 
-```qis
+```rok
 enum Color {
     Red,
     Green,
@@ -29,9 +30,15 @@ Enums do not support, in the initial design:
 
 The compiler still needs an internal representation for storage, comparison, switching, and ABI lowering. That representation is an implementation detail unless a later ABI feature explicitly exposes it.
 
-For the initial implementation, every enum uses a fixed 32-bit representation. This gives the compiler and backend a simple, predictable layout while keeping the representation hidden from normal Arqis code.
+For the initial implementation, every enum uses a fixed 32-bit representation. This gives the compiler and backend a simple, predictable layout while keeping the representation hidden from normal RokC code.
 
 Variants receive compiler-internal ordinal values in declaration order. The first declared variant is ordinal zero and is therefore the default value produced by zero-initialization.
+
+## Operators and conversions
+
+Enum values may be compared with `==` and `!=` only when both operands have the same enum type.
+Ordering operators (`<`, `>`, `<=`, `>=`) are not defined for enums. Enums do not implicitly
+convert to integers or to other enum types; any conversion must be explicit.
 
 ## Switch behavior
 
@@ -49,7 +56,5 @@ switches require `default` because their domains are not practically exhaustible
 
 ## Open questions
 
-- Is enum equality allowed only between values of the same enum type?
-- Is ordering (`<`, `>`) forbidden for enums?
 - What happens when invalid enum bits enter through raw memory or foreign code?
 - Can enum values be used as compile-time constants in array sizes or other declarations?

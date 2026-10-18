@@ -1,4 +1,4 @@
-# Arqis Plans
+# RokC Plans
 
 This directory contains future, experimental, and unscheduled language ideas. Nothing here is part of the current language contract unless it is moved into a release specification.
 
@@ -24,6 +24,7 @@ This directory contains future, experimental, and unscheduled language ideas. No
 - [Numeric literals](literals.md)
 - [Error handling](error-handling.md)
 - [Compiler diagnostics](diagnostics.md)
+- [Command-line interface](cli.md)
 - [C ABI and embeddability](abi.md)
 - [Bit-fields](bit-fields.md)
 - [Switch expressions and pattern matching](pattern-matching.md)

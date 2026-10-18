@@ -2,7 +2,7 @@ MAKEFLAGS += --no-print-directory
 
 NOB_EXEC := nob
 
-all: run
+all: build
 
 bootstrap:
 	cc nob.c -o $(NOB_EXEC)

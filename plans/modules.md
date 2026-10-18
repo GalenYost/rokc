@@ -1,24 +1,24 @@
 # Modules, Imports, and Visibility — Core Language Plan
 
-Status: Planned for 0.1.0
+Status: Syntax in 0.1.0; resolution and cross-file semantics in 0.2.0
 
 ## Import model
 
-Arqis imports follow the Java/Rust idea of either binding a specific leaf or binding a module namespace. Arqis uses `.` as the path separator:
+RokC imports follow the Java/Rust idea of either binding a specific leaf or binding a module namespace. RokC uses `.` as the path separator:
 
-```qis
+```rok
 import std.collections.HashMap;
 
 HashMap.new();
 ```
 
-```qis
+```rok
 import std.collections;
 
 collections.HashMap.new();
 ```
 
-```qis
+```rok
 import std;
 
 std.collections.HashMap.new();
@@ -29,10 +29,35 @@ The final path component is bound in the local namespace. The resolver determine
 ## Initial module assumptions
 
 - One source file represents one module.
+- Modules are the only qualified naming boundary; the core language has no user-declared
+  namespace blocks.
 - Module paths are resolved from a configured project/package source root.
 - Relative imports such as `./utils` are not supported initially.
-- A source file such as `src/core/parser.qis` is imported as `core.parser` from that source root.
+- A source file such as `src/core/parser.rok` is imported as `core.parser` from that source root.
 - A declaration inside it may be imported as `core.parser.Parser`.
+- Importing a module binds its final path component as a namespace:
+
+  ```rok
+  import core.parser;
+
+  parser.Parser value;
+  ```
+
+- Importing a declaration binds that declaration directly:
+
+  ```rok
+  import core.parser.Parser;
+
+  Parser value;
+  ```
+
+- Imports may use an explicit `as` alias when a shorter or collision-free local name is desired:
+
+  ```rok
+  import core.parser as parser_impl;
+  import other.parser as parser_api;
+  ```
+
 - Imported declarations must be exported by their defining module.
 - Imports are local to the importing module and are never re-exported automatically.
 - There is no explicit re-export syntax in the initial design.
@@ -41,20 +66,28 @@ The final path component is bound in the local namespace. The resolver determine
 
 ## Global initialization
 
-Modules do not support runtime global-variable initialization. A global initializer must be resolved at compile time, or the declaration must use whatever zero/uninitialized policy the core language eventually specifies.
+Modules do not support runtime global-variable initialization. A global initializer must be
+resolved at compile time; a global declaration without an initializer is zero-initialized.
+
+Zero-initialization means null for pointers, false for booleans, positive zero for floating-point
+values, recursively zeroed fields and elements for aggregates, and the first declared variant for
+enums.
 
 Examples of the intended distinction:
 
-```qis
+```rok
 comptime const int EVAL_INT = 5 + 8 * 2;
 const int INT_VAR = 21;
 ```
 
-Global initializers may not call runtime functions, allocate runtime memory, or depend on module initialization order.
+Global initializers may not call runtime functions, allocate runtime memory, or depend on module
+initialization order. This restriction does not automatically make every global a compile-time
+name: `comptime` is required when a value must be referenced from a compile-time context such as a
+fixed-array bound.
 
 The intended forms are:
 
-```qis
+```rok
 comptime int count = 5 + 5;
 int other_count = 0;
 ```
@@ -62,8 +95,6 @@ int other_count = 0;
 If a global is declared without an initializer, it receives default zero-initialization. The exact zero value for pointers, booleans, floating-point values, structs, arrays, and enums must be specified by the type system.
 
 For enums, the first declared variant has internal ordinal zero and is the default zero-initialized value.
-- Import aliases may be added later if collisions require them.
-
 ## Visibility
 
 The current visibility proposal is:
@@ -90,12 +121,7 @@ This intentionally gives `static` different meanings by declaration scope, simil
 
 ## Open questions
 
-- Is an imported module name available only under its final component or also under its full path?
-- Are private types allowed in exported function signatures?
-- Can a module-private type appear in a public function signature?
 - How are module initialization side effects ordered?
-- Is `comptime const` an explicit request, or are all constant global initializers automatically compile-time evaluated?
-- What syntax should import aliases use?
 - How are source roots and project entry points configured?
 - Are module and file names case-sensitive?
 - What happens when a file and directory produce the same dotted module path?

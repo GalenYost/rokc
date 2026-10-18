@@ -210,17 +210,20 @@ struct VarDeclNode {
     Token name;
     DataType type;
     Node *initializer; // Can be NULL
-    bool is_const;
+
     bool is_static;
+    bool is_const;
 };
 
 struct FuncDeclNode {
     Token name;
+    size_t param_count;
     DataType return_type;
     Node *params; // Linked list
-    size_t param_count;
     Node *body;
-    bool is_comptime;
+
+    bool is_static;
+    bool is_const;
 };
 
 struct StructDeclNode {
