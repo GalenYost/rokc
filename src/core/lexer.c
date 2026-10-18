@@ -63,6 +63,31 @@ static bool is_digit(char c) {
     return c >= '0' && c <= '9';
 }
 
+static bool is_digit_for_base(char c, unsigned base) {
+    if (c >= '0' && c <= '9') return (unsigned)(c - '0') < base;
+    if (base == 16 && c >= 'a' && c <= 'f') return true;
+    if (base == 16 && c >= 'A' && c <= 'F') return true;
+    return false;
+}
+
+static size_t scan_digits(Lexer *lex, unsigned base, bool *valid) {
+    size_t count = 0;
+    while (is_digit_for_base(lexer_peek(lex), base) || lexer_peek(lex) == '_') {
+        char c = lexer_peek(lex);
+        if (c == '_') {
+            char previous = lex->current > lex->start ? lex->current[-1] : '\0';
+            char next = lexer_peek_next(lex);
+            if (!is_digit_for_base(previous, base) || !is_digit_for_base(next, base)) {
+                *valid = false;
+            }
+        } else {
+            count++;
+        }
+        lexer_advance(lex);
+    }
+    return count;
+}
+
 static char lexer_peek(Lexer *lex) {
     if (is_at_end(lex)) {
         return '\0';
@@ -439,25 +464,60 @@ static Token identify_keyword(Lexer *lex) {
 
 static Token identify_number(Lexer *lex) {
     TokenType type = TOKEN_INT;
+    bool valid = true;
+    unsigned base = 10;
 
-    while (lexer_peek(lex) == '_' || is_digit(lexer_peek(lex))) {
-        lexer_advance(lex);
+    if (lex->current[0] == '0') {
+        switch (lex->current[1]) {
+            case 'x': base = 16; break;
+            case 'b': base = 2; break;
+            case 'o': base = 8; break;
+        }
     }
 
-    if (lexer_peek(lex) == '.' && is_digit(lexer_peek_next(lex))) {
-        type = TOKEN_FLOAT;
-
+    if (base != 10) {
         lexer_advance(lex);
+        lexer_advance(lex);
+        if (scan_digits(lex, base, &valid) == 0) valid = false;
+    } else {
+        scan_digits(lex, 10, &valid);
 
-        while (lexer_peek(lex) == '_' || is_digit(lexer_peek(lex))) {
+        if (lexer_peek(lex) == '.' && is_digit(lexer_peek_next(lex))) {
+            type = TOKEN_FLOAT;
             lexer_advance(lex);
+            scan_digits(lex, 10, &valid);
         }
+
+        if (lexer_peek(lex) == 'e' || lexer_peek(lex) == 'E') {
+            type = TOKEN_FLOAT;
+            lexer_advance(lex);
+            if (lexer_peek(lex) == '+' || lexer_peek(lex) == '-') lexer_advance(lex);
+            if (scan_digits(lex, 10, &valid) == 0) valid = false;
+        }
+    }
+
+    // Suffixes are not part of the language yet, so a letter or separator
+    // immediately following a number makes the whole token malformed.
+    while ((lexer_peek(lex) >= 'a' && lexer_peek(lex) <= 'z') ||
+           (lexer_peek(lex) >= 'A' && lexer_peek(lex) <= 'Z') ||
+           lexer_peek(lex) == '_' || is_digit(lexer_peek(lex))) {
+        valid = false;
+        lexer_advance(lex);
     }
 
     StringStream ss = {
         .data = (char*)lex->start,
         .len = (size_t)(lex->current - lex->start)
     };
+
+    if (!valid) {
+        return (Token) {
+            .type = TOKEN_UNKNOWN,
+            .view = ss,
+            .line = lex->line,
+            .col = lex->col,
+        };
+    }
 
     Token t = {
         .type = type,
