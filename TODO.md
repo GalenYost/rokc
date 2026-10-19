@@ -7,7 +7,7 @@ generation is deferred to 0.2.0.
 ## Lexer and tokens
 
 - [ ] Finalize keyword and reserved-feature token handling.
-- [ ] Support numeric literals, separators, bases, and floating-point forms.
+- [x] Support numeric literals, separators, bases, and floating-point forms.
 - [ ] Support string and one-byte character literals with escapes.
 - [ ] Validate comments, unterminated literals, and invalid characters.
 - [ ] Preserve accurate source locations on every token.
