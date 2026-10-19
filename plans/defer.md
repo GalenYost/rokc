@@ -6,7 +6,7 @@ Status: Planned for 0.1.0
 
 The initial form is restricted to function calls:
 
-```qis
+```rok
 defer free(ptr);
 ```
 
@@ -38,7 +38,7 @@ Arbitrary deferred statements are intentionally excluded from the first design b
 
 Example:
 
-```qis
+```rok
 void example(int* p) {
     defer free(p); // captures the current value of p
     p = null;

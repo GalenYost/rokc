@@ -1,4 +1,4 @@
-# Arqis Documentation
+# RokC Documentation
 
 This directory is being separated into current language/compiler documentation and release notes.
 

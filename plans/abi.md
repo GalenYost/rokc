@@ -2,7 +2,7 @@
 
 Status: Deferred until after the core release and stable IR/backend
 
-Arqis will not promise C ABI compatibility in 0.1.0. Source-level C-like syntax is not a binary
+RokC will not promise C ABI compatibility in 0.1.0. Source-level C-like syntax is not a binary
 ABI guarantee. A later release must define:
 
 - exported symbol naming and visibility;

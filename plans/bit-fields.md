@@ -2,16 +2,16 @@
 
 Status: Deferred feature
 
-Arqis may eventually support compact integer fields such as:
+RokC may eventually support compact integer fields such as:
 
-```qis
+```rok
 struct Flags {
     u8 enabled: 1;
     u8 mode: 3;
 }
 ```
 
-The default Arqis representation should be deterministic and documented, including allocation
+The default RokC representation should be deterministic and documented, including allocation
 units, bit ordering, padding, and whether fields may cross units. A future explicit
 `repr(c)`/`extern(c)` mode may opt into the target compiler's C ABI for interoperability, but that
 layout is target-specific and not portable. Bit-fields cannot be treated as ordinary addressable

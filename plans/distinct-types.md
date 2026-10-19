@@ -4,7 +4,7 @@ Status: Unscheduled
 
 The initial `type Name = ExistingType` design will use transparent aliases. A future `distinct` type feature may provide nominal types with the same representation but separate compile-time identity:
 
-```qis
+```rok
 type UserId = int;              // transparent alias
 distinct type ProductId = int;  // future nominal type
 ```

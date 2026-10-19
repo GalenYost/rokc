@@ -6,14 +6,14 @@ Status: Unscheduled
 
 Split the standard library into two broad categories:
 
-- **Internal standard library**: small, commonly used functionality shipped with Arqis or otherwise available as part of the normal toolchain.
+- **Internal standard library**: small, commonly used functionality shipped with RokC or otherwise available as part of the normal toolchain.
 - **External libraries**: optional dependencies fetched, built, cached, and linked according to a build recipe.
 
 The goal is to avoid forcing every program to compile or ship the entire standard library.
 
 Possible future build-recipe operations include:
 
-```qis
+```rok
 import std.Build;
 
 void build(Build b) {
