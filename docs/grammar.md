@@ -449,8 +449,9 @@ The following is not part of 0.1 and must produce an unsupported-feature diagnos
 <expression_list>     ::= <assignment_expression> { "," <assignment_expression> }
 ```
 
-The `[reserved]` items are lexed as their own tokens but must produce an unsupported-feature
-diagnostic when used in 0.1.
+The `[reserved]` items are lexically distinguishable from ordinary 0.1 syntax but must produce an
+unsupported-feature diagnostic when used in 0.1. A string containing an unescaped `${` marker is
+returned as `TOKEN_LIT_STR_INTERP`, not as an ordinary string-literal token.
 
 ---
 

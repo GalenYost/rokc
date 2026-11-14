@@ -23,6 +23,8 @@ static Token identify_symbols_and_operators(Lexer *lex);
 static Token identify_keyword(Lexer *lex);
 static Token identify_number(Lexer *lex);
 
+static TokenType identify_numeric_type(const char *name, size_t len);
+
 static bool is_at_end(Lexer *lex) {
     return *lex->current == '\0';
 }
@@ -118,6 +120,7 @@ static char lexer_advance(Lexer *lex) {
 
 static Token lex_string(Lexer *lex) {
     lex->current++;
+    bool has_interpolation = false;
 
     size_t max_len = 0;
     const char *temp = lex->current;
@@ -135,6 +138,10 @@ static Token lex_string(Lexer *lex) {
     size_t actual_len = 0;
 
     while (!is_at_end(lex) && *lex->current != '"') {
+        if (*lex->current == '$' && *(lex->current + 1) == '{') {
+            has_interpolation = true;
+        }
+
         if (*lex->current == '\n') {
             lex->line++;
             lex->col = 1;
@@ -175,7 +182,7 @@ static Token lex_string(Lexer *lex) {
     lex->col++;
 
     Token t = {
-        .type = TOKEN_LIT_STR,
+        .type = has_interpolation ? TOKEN_LIT_STR_INTERP : TOKEN_LIT_STR,
         .view = (StringStream) {
             .data = dest,
             .len = actual_len
@@ -410,10 +417,12 @@ static Token identify_keyword(Lexer *lex) {
     switch (len) {
         case 2:
             if (strncmp(lex->start, "if", 2) == 0) type = TOKEN_IF;
+            if (strncmp(lex->start, "as", 2) == 0) type = TOKEN_AS;
+            if (strncmp(lex->start, "do", 2) == 0) type = TOKEN_DO;
             break;
         case 3:
             if (strncmp(lex->start, "for", 3) == 0) type = TOKEN_FOR;
-            else if (strncmp(lex->start, "int", 3) == 0) type = TOKEN_INT;
+            else if (strncmp(lex->start, "int", 3) == 0) type = TOKEN_SIGNED_INT;
             break;
         case 4:
             if (strncmp(lex->start, "else", 4) == 0) type = TOKEN_ELSE;
@@ -424,6 +433,7 @@ static Token identify_keyword(Lexer *lex) {
             else if (strncmp(lex->start, "char", 4) == 0) type = TOKEN_CHAR;
             else if (strncmp(lex->start, "null", 4) == 0) type = TOKEN_NULL;
             else if (strncmp(lex->start, "case", 4) == 0) type = TOKEN_CASE;
+            else if (strncmp(lex->start, "bool", 4) == 0) type = TOKEN_BOOL;
             break;
         case 5:
             if (strncmp(lex->start, "while", 5) == 0) type = TOKEN_WHILE;
@@ -432,6 +442,7 @@ static Token identify_keyword(Lexer *lex) {
             else if (strncmp(lex->start, "const", 5) == 0) type = TOKEN_CONST;
             else if (strncmp(lex->start, "float", 5) == 0) type = TOKEN_FLOAT;
             else if (strncmp(lex->start, "false", 5) == 0) type = TOKEN_FALSE;
+            else if (strncmp(lex->start, "union", 5) == 0) type = TOKEN_UNION;
             break;
         case 6:
             if (strncmp(lex->start, "return", 6) == 0) type = TOKEN_RETURN;
@@ -439,14 +450,20 @@ static Token identify_keyword(Lexer *lex) {
             else if (strncmp(lex->start, "static", 6) == 0) type = TOKEN_STATIC;
             else if (strncmp(lex->start, "struct", 6) == 0) type = TOKEN_STRUCT;
             else if (strncmp(lex->start, "switch", 6) == 0) type = TOKEN_SWITCH;
+            else if (strncmp(lex->start, "sizeof", 6) == 0) type = TOKEN_SIZEOF;
             break;
         case 7:
             if (strncmp(lex->start, "default", 7) == 0) type = TOKEN_DEFAULT;
+            else if (strncmp(lex->start, "alignof", 7) == 0) type = TOKEN_ALIGNOF;
             break;
         case 8:
             if (strncmp(lex->start, "continue", 8) == 0) type = TOKEN_CONTINUE;
             else if (strncmp(lex->start, "comptime", 8) == 0) type = TOKEN_COMPTIME;
             break;
+    }
+
+    if (type == TOKEN_IDENT) {
+        type = identify_numeric_type(lex->start, len);
     }
 
     Token t = {
@@ -463,7 +480,7 @@ static Token identify_keyword(Lexer *lex) {
 }
 
 static Token identify_number(Lexer *lex) {
-    TokenType type = TOKEN_INT;
+    TokenType type = TOKEN_LIT_INT;
     bool valid = true;
     unsigned base = 10;
 
@@ -483,13 +500,13 @@ static Token identify_number(Lexer *lex) {
         scan_digits(lex, 10, &valid);
 
         if (lexer_peek(lex) == '.' && is_digit(lexer_peek_next(lex))) {
-            type = TOKEN_FLOAT;
+            type = TOKEN_LIT_FLOAT;
             lexer_advance(lex);
             scan_digits(lex, 10, &valid);
         }
 
         if (lexer_peek(lex) == 'e' || lexer_peek(lex) == 'E') {
-            type = TOKEN_FLOAT;
+            type = TOKEN_LIT_FLOAT;
             lexer_advance(lex);
             if (lexer_peek(lex) == '+' || lexer_peek(lex) == '-') lexer_advance(lex);
             if (scan_digits(lex, 10, &valid) == 0) valid = false;
@@ -527,6 +544,38 @@ static Token identify_number(Lexer *lex) {
     };
 
     return t;
+}
+
+static TokenType identify_numeric_type(const char *name, size_t len) {
+    // supported numeric types defined here
+    // lexer only recognizes generic types
+    // recognizing exact size is parser's responsibility
+    static const struct {
+        const char *name;
+        TokenType type;
+    } numeric_types[] = {
+        {"i8", TOKEN_SIGNED_INT},
+        {"i16", TOKEN_SIGNED_INT},
+        {"i32", TOKEN_SIGNED_INT},
+        {"i64", TOKEN_SIGNED_INT},
+        {"u8", TOKEN_UNSIGNED_INT},
+        {"u16", TOKEN_UNSIGNED_INT},
+        {"u32", TOKEN_UNSIGNED_INT},
+        {"u64", TOKEN_UNSIGNED_INT},
+        {"f32", TOKEN_FLOAT},
+        {"f64", TOKEN_FLOAT},
+        {"isize", TOKEN_SIGNED_INT},
+        {"usize", TOKEN_UNSIGNED_INT},
+    };
+
+    for (size_t i = 0; i < sizeof(numeric_types) / sizeof(numeric_types[0]); i++) {
+        size_t candidate_len = strlen(numeric_types[i].name);
+        if (len == candidate_len && memcmp(name, numeric_types[i].name, len) == 0) {
+            return numeric_types[i].type;
+        }
+    }
+
+    return TOKEN_IDENT;
 }
 
 Lexer lexer_new(StringStream ss, Arena *a) {

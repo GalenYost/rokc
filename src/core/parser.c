@@ -1,6 +1,7 @@
 #include "parser.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 // handle errors with "panic mode"
 static void parser_error(Parser *p, const char *err);
@@ -12,6 +13,7 @@ static void parser_advance(Parser *p);
 static Token parser_consume(Parser *p, TokenType type, const char *err);
 // optional expect
 static bool parser_match(Parser *p, TokenType type);
+static unsigned parse_numeric_type_width(Token type_token);
 
 // parser_next helper functions
 static Node *parse_import_decl(Parser *p);
@@ -19,6 +21,12 @@ static Node *parse_struct_decl(Parser *p);
 static Node *parse_enum_decl(Parser *p);
 static Node *parse_type_decl(Parser *p);
 static Node *parse_var_or_func_decl(Parser *p);
+static Node *parse_expr(Parser *p);
+static Node *parse_binary_expr(Parser *p, int min_precedence);
+static Node *parse_unary_expr(Parser *p);
+static Node *parse_primary_expr(Parser *p);
+static int binary_precedence(TokenType type);
+static bool is_right_associative(TokenType type);
 
 // parse types e.g int, int**, char, void* etc
 static DataType parse_type(Parser *p);
@@ -190,18 +198,40 @@ static Node *parse_enum_decl(Parser *p) {
 static DataType parse_type(Parser *p) {
     DataType dt = {0};
 
-    if (parser_match(p, TOKEN_INT)) {
+    if (p->curr.type == TOKEN_SIGNED_INT) {
+        Token token = p->curr;
+        parser_advance(p);
         dt.kind = TYPE_INT;
+        if (token.view.len == 3 && memcmp(token.view.data, "int", 3) == 0) {
+            // Target-native signed integer; no explicit width.
+        } else if (token.view.len == 5 && memcmp(token.view.data, "isize", 5) == 0) {
+            dt.is_target_sized = true;
+        } else {
+            dt.bit_width = parse_numeric_type_width(token);
+        }
+    } else if (p->curr.type == TOKEN_UNSIGNED_INT) {
+        Token token = p->curr;
+        parser_advance(p);
+        dt.kind = TYPE_UINT;
+        if (token.view.len == 5 && memcmp(token.view.data, "usize", 5) == 0) {
+            dt.is_target_sized = true;
+        } else {
+            dt.bit_width = parse_numeric_type_width(token);
+        }
     } else if (parser_match(p, TOKEN_CHAR)) {
         dt.kind = TYPE_CHAR;
-    } else if (parser_match(p, TOKEN_FLOAT)) {
+    } else if (p->curr.type == TOKEN_FLOAT) {
+        Token token = p->curr;
+        parser_advance(p);
         dt.kind = TYPE_FLOAT;
+        dt.bit_width = token.view.len == 3 && token.view.data[1] >= '0' &&
+                       token.view.data[1] <= '9'
+                           ? parse_numeric_type_width(token)
+                           : 32;
     } else if (parser_match(p, TOKEN_BOOL)) {
         dt.kind = TYPE_BOOL;
     } else if (parser_match(p, TOKEN_VOID)) {
         dt.kind = TYPE_VOID;
-    } else if (parser_match(p, TOKEN_NULL)) {
-        dt.kind = TYPE_NULL;
     } else {
         Token ident = parser_consume(p, TOKEN_IDENT, "Expected type name");
         dt.kind = TYPE_CUSTOM;
@@ -217,6 +247,14 @@ static DataType parse_type(Parser *p) {
     }
 
     return dt;
+}
+
+static unsigned parse_numeric_type_width(Token type_token) {
+    unsigned width = 0;
+    for (size_t i = 1; i < type_token.view.len; i++) {
+        width = width * 10 + (unsigned)(type_token.view.data[i] - '0');
+    }
+    return width;
 }
 
 static Node *parse_type_decl(Parser *p) {
@@ -240,19 +278,215 @@ static Node *parse_type_decl(Parser *p) {
 }
 
 static Node *parse_var_or_func_decl(Parser *p) {
-    // TODO
-    // parse type
-    // parse name
-    // expect '=' or '('
-    // if '=' - parse literal and expect ';'
-    // --------
-    // else if '(' - parse args and expect ')'
-    // 
-    // try to:
-    // either get ';' to simply declare function
-    // or
-    // get '{' and parse body + expect '}'
-    return NULL;
+    // the order matters here since
+    // `comptime static const` is possible
+    const bool is_comptime = parser_match(p, TOKEN_COMPTIME);
+    const bool is_static = parser_match(p, TOKEN_STATIC);
+    const bool is_const = parser_match(p, TOKEN_CONST);
+
+    const DataType type = parse_type(p);
+    const Token name = parser_consume(p, TOKEN_IDENT, "Expected identifier after type name");
+
+    // assume variable declaration without initializer by default
+    NodeKind kind = NODE_VAR_DECL;
+    Node *initializer = NULL;
+
+    if (parser_match(p, TOKEN_EQ)) {
+        kind = NODE_VAR_DECL;
+        initializer = parse_expr(p);
+    } else if (parser_match(p, TOKEN_BRACE_LEFT)) {
+        kind = NODE_FUNC_DECL;
+        // TODO
+        // func args
+        // expect right brace
+        // try left curly
+        // parse body
+        // expect right curly
+    }
+
+    Node *n = node_new(p->a, NODE_VAR_DECL, p->curr.line, p->curr.col, p->src_path);
+    n->_comptime = is_comptime;
+
+    switch (kind) {
+        case NODE_VAR_DECL: {
+            n->as.var_decl.initializer = initializer;
+
+            n->as.var_decl.type = type;
+            n->as.var_decl.name = name;
+
+            n->as.var_decl.is_static = is_static;
+            n->as.var_decl.is_const = is_const;
+
+            break;
+        };
+        case NODE_FUNC_DECL: {
+            n->kind = NODE_FUNC_DECL;
+
+            n->as.func_decl.is_static = is_static;
+            n->as.func_decl.is_const = is_const;
+
+            n->as.func_decl.return_type = type;
+            n->as.func_decl.name = name;
+            // TODO: add body and arguments
+
+            break;
+        }
+        default: break; // TODO: might want to add error handling here
+    };
+
+    parser_consume(p, TOKEN_SEMI, "Expected ';' after variable or function declaration");
+
+    return n;
+}
+
+static Node *parse_expr(Parser *p) {
+    return parse_binary_expr(p, 1);
+}
+
+static Node *parse_binary_expr(Parser *p, int min_precedence) {
+    Node *left = parse_unary_expr(p);
+    if (!left) return NULL;
+
+    while (!p->panic_mode) {
+        int precedence = binary_precedence(p->curr.type);
+        if (precedence < min_precedence) break;
+
+        Token op = p->curr;
+        parser_advance(p);
+
+        int rhs_min_precedence = is_right_associative(op.type)
+                                     ? precedence
+                                     : precedence + 1;
+        Node *right = parse_binary_expr(p, rhs_min_precedence);
+        if (!right) return NULL;
+
+        Node *binary = node_new(p->a, NODE_BINOP, op.line, op.col, p->src_path);
+        binary->as.binop.left = left;
+        binary->as.binop.right = right;
+        binary->as.binop.op = op.type;
+        left = binary;
+    }
+
+    return left;
+}
+
+static Node *parse_unary_expr(Parser *p) {
+    TokenType op = p->curr.type;
+    switch (op) {
+        case TOKEN_BANG:
+        case TOKEN_BIT_NOT:
+        case TOKEN_PLUS:
+        case TOKEN_MINUS:
+        case TOKEN_PLUS_PLUS:
+        case TOKEN_MINUS_MINUS:
+        case TOKEN_STAR:
+        case TOKEN_BIT_AND: {
+            Token operator_token = p->curr;
+            parser_advance(p);
+
+            Node *operand = parse_unary_expr(p);
+            if (!operand) return NULL;
+
+            Node *unary = node_new(p->a, NODE_UNARY, operator_token.line,
+                                   operator_token.col, p->src_path);
+            unary->as.unary.operand = operand;
+            unary->as.unary.op = op;
+            return unary;
+        }
+        default:
+            return parse_primary_expr(p);
+    }
+}
+
+static Node *parse_primary_expr(Parser *p) {
+    Token token = p->curr;
+
+    switch (token.type) {
+        case TOKEN_LIT_INT:
+        case TOKEN_LIT_FLOAT:
+        case TOKEN_LIT_STR:
+        case TOKEN_LIT_CHAR:
+        case TOKEN_TRUE:
+        case TOKEN_FALSE:
+        case TOKEN_NULL: {
+            parser_advance(p);
+            Node *literal = node_new(p->a, NODE_LITERAL, token.line, token.col, p->src_path);
+            literal->as.literal.token = token;
+            return literal;
+        }
+        case TOKEN_IDENT: {
+            parser_advance(p);
+            Node *identifier = node_new(p->a, NODE_IDENTIFIER, token.line, token.col, p->src_path);
+            identifier->as.identifier.name = token;
+            return identifier;
+        }
+        case TOKEN_PAREN_LEFT: {
+            parser_advance(p);
+            Node *expr = parse_expr(p);
+            if (!expr) return NULL;
+            parser_consume(p, TOKEN_PAREN_RIGHT, "Expected ')' after expression");
+            return p->panic_mode ? NULL : expr;
+        }
+        default:
+            parser_error(p, "Expected expression");
+            return NULL;
+    }
+}
+
+static int binary_precedence(TokenType type) {
+    switch (type) {
+        case TOKEN_COMMA: return 1;
+
+        case TOKEN_EQ:
+        case TOKEN_PLUS_EQ:
+        case TOKEN_MINUS_EQ:
+        case TOKEN_MULTI_EQ:
+        case TOKEN_DIV_EQ:
+        case TOKEN_SHIFT_LEFT_EQ:
+        case TOKEN_SHIFT_RIGHT_EQ:
+        case TOKEN_BIT_AND_EQ:
+        case TOKEN_XOR_EQ:
+        case TOKEN_BIT_OR_EQ:
+            return 2;
+
+        case TOKEN_LOGICAL_OR: return 3;
+        case TOKEN_LOGICAL_AND: return 4;
+        case TOKEN_BIT_OR: return 5;
+        case TOKEN_XOR: return 6;
+        case TOKEN_BIT_AND: return 7;
+        case TOKEN_EQ_EQ:
+        case TOKEN_NOT_EQ: return 8;
+        case TOKEN_LT:
+        case TOKEN_LT_EQ:
+        case TOKEN_GT:
+        case TOKEN_GT_EQ: return 9;
+        case TOKEN_SHIFT_LEFT:
+        case TOKEN_SHIFT_RIGHT: return 10;
+        case TOKEN_PLUS:
+        case TOKEN_MINUS: return 11;
+        case TOKEN_STAR:
+        case TOKEN_SLASH:
+        case TOKEN_PERCENT: return 12;
+        default: return 0;
+    }
+}
+
+static bool is_right_associative(TokenType type) {
+    switch (type) {
+        case TOKEN_EQ:
+        case TOKEN_PLUS_EQ:
+        case TOKEN_MINUS_EQ:
+        case TOKEN_MULTI_EQ:
+        case TOKEN_DIV_EQ:
+        case TOKEN_SHIFT_LEFT_EQ:
+        case TOKEN_SHIFT_RIGHT_EQ:
+        case TOKEN_BIT_AND_EQ:
+        case TOKEN_XOR_EQ:
+        case TOKEN_BIT_OR_EQ:
+            return true;
+        default:
+            return false;
+    }
 }
 
 Parser parser_new(Lexer *lex, Arena *a, const char *path) {

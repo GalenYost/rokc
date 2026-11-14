@@ -170,7 +170,7 @@ static char *format_literal_token(Arena *a, Token t, const char *name) {
     FormatBuffer b = {0};
     format_buffer_append_fmt(&b, "%zu:%zu : %s(", t.line, t.col, name);
 
-    if (t.type == TOKEN_LIT_STR) {
+    if (t.type == TOKEN_LIT_STR || t.type == TOKEN_LIT_STR_INTERP) {
         format_buffer_append(&b, "\"");
         format_token_literal_bytes(&b, t.view, true, true);
         format_buffer_append(&b, "\"");
@@ -414,15 +414,22 @@ char *format_token(Arena *a, Token t) {
         [TOKEN_SWITCH] = "TOKEN_SWITCH",
         [TOKEN_CASE] = "TOKEN_CASE",
         [TOKEN_DEFAULT] = "TOKEN_DEFAULT",
+        [TOKEN_AS] = "TOKEN_AS",
+        [TOKEN_DO] = "TOKEN_DO",
+        [TOKEN_UNION] = "TOKEN_UNION",
+        [TOKEN_SIZEOF] = "TOKEN_SIZEOF",
+        [TOKEN_ALIGNOF] = "TOKEN_ALIGNOF",
         // TYPES
         [TOKEN_CHAR] = "TOKEN_CHAR",
-        [TOKEN_INT] = "TOKEN_INT",
+        [TOKEN_SIGNED_INT] = "TOKEN_SIGNED_INT",
+        [TOKEN_UNSIGNED_INT] = "TOKEN_UNSIGNED_INT",
         [TOKEN_FLOAT] = "TOKEN_FLOAT",
         [TOKEN_BOOL] = "TOKEN_BOOL",
         [TOKEN_VOID] = "TOKEN_VOID",
         [TOKEN_NULL] = "TOKEN_NULL",
         // LITERALS
         [TOKEN_LIT_STR] = "TOKEN_LIT_STR",
+        [TOKEN_LIT_STR_INTERP] = "TOKEN_LIT_STR_INTERP",
         [TOKEN_LIT_CHAR] = "TOKEN_LIT_CHAR",
         [TOKEN_LIT_INT] = "TOKEN_LIT_INT",
         [TOKEN_LIT_FLOAT] = "TOKEN_LIT_FLOAT",
@@ -433,7 +440,8 @@ char *format_token(Arena *a, Token t) {
     };
 
     if (t.type >= TOKEN_PLUS && t.type < TOKEN_COUNT && words[t.type]) {
-        if (t.type == TOKEN_LIT_STR || t.type == TOKEN_LIT_CHAR) {
+        if (t.type == TOKEN_LIT_STR || t.type == TOKEN_LIT_STR_INTERP ||
+            t.type == TOKEN_LIT_CHAR) {
             return format_literal_token(a, t, words[t.type]);
         }
 
@@ -483,11 +491,12 @@ static void format_token_field(FormatBuffer *b, Arena *scratch, size_t indent,
     format_buffer_append(b, "\n");
 }
 
-static void format_type_field(FormatBuffer *b, size_t indent, const char *label, const DataType *type) {
+static void format_type_field(FormatBuffer *b, Arena *scratch, size_t indent,
+                              const char *label, const DataType *type) {
     static const char *kind_names[] = {
         [TYPE_VOID] = "void",
-        [TYPE_NULL] = "null",
         [TYPE_INT] = "int",
+        [TYPE_UINT] = "uint",
         [TYPE_FLOAT] = "float",
         [TYPE_CHAR] = "char",
         [TYPE_BOOL] = "bool",
@@ -500,13 +509,14 @@ static void format_type_field(FormatBuffer *b, size_t indent, const char *label,
                       type->kind < (int)(sizeof(kind_names) / sizeof(kind_names[0]));
     if (!valid_kind) {
         format_buffer_append(b, "<invalid type>");
-    } else if (type->kind == TYPE_CUSTOM && type->name.data) {
-        format_buffer_append_n(b, type->name.data, type->name.len);
     } else {
-        format_buffer_append(b, kind_names[type->kind]);
+        arena_clear(scratch);
+        char *formatted = format_data_type(scratch, type);
+        format_buffer_append(b, formatted ? formatted : "<invalid type>");
     }
-    for (int i = 0; i < type->pointer_depth; i++) format_buffer_append(b, "*");
-    format_buffer_append_fmt(b, " (kind=%s, pointer_depth=%d)\n", valid_kind ? kind_names[type->kind] : "invalid", type->pointer_depth);
+    format_buffer_append_fmt(b, " (kind=%s, bit_width=%u, target_sized=%s, pointer_depth=%d)\n",
+                             valid_kind ? kind_names[type->kind] : "invalid",
+                             type->bit_width, format_bool(type->is_target_sized), type->pointer_depth);
 }
 
 static void format_node_field(FormatBuffer *b, Arena *scratch, size_t indent,
@@ -562,7 +572,7 @@ static void format_node_one(FormatBuffer *b, Arena *scratch, Node *n, size_t ind
     switch (n->kind) {
         case NODE_VAR_DECL:
             format_token_field(b, scratch, indent + 1, "name", n->as.var_decl.name);
-            format_type_field(b, indent + 1, "type", &n->as.var_decl.type);
+            format_type_field(b, scratch, indent + 1, "type", &n->as.var_decl.type);
             format_buffer_indent(b, indent + 1);
             format_buffer_append_fmt(b, "is_const: %s\n", format_bool(n->as.var_decl.is_const));
             format_buffer_indent(b, indent + 1);
@@ -572,7 +582,7 @@ static void format_node_one(FormatBuffer *b, Arena *scratch, Node *n, size_t ind
 
         case NODE_FUNC_DECL:
             format_token_field(b, scratch, indent + 1, "name", n->as.func_decl.name);
-            format_type_field(b, indent + 1, "return_type", &n->as.func_decl.return_type);
+            format_type_field(b, scratch, indent + 1, "return_type", &n->as.func_decl.return_type);
             format_buffer_indent(b, indent + 1);
             format_buffer_append_fmt(b, "param_count: %zu\n", n->as.func_decl.param_count);
             format_buffer_indent(b, indent + 1);
@@ -602,7 +612,7 @@ static void format_node_one(FormatBuffer *b, Arena *scratch, Node *n, size_t ind
 
         case NODE_TYPE_DECL:
             format_token_field(b, scratch, indent + 1, "alias_name", n->as.type_decl.alias_name);
-            format_type_field(b, indent + 1, "target_type", &n->as.type_decl.target_type);
+            format_type_field(b, scratch, indent + 1, "target_type", &n->as.type_decl.target_type);
             break;
 
         case NODE_BLOCK:
@@ -746,11 +756,11 @@ const char *format_bool(bool value) {
     return value ? "true" : "false";
 }
 
-char *format_data_type(Arena *a, DataType *type) {
+char *format_data_type(Arena *a, const DataType *type) {
     static const char *kind_names[] = {
         [TYPE_VOID] = "void",
-        [TYPE_NULL] = "null",
         [TYPE_INT] = "int",
+        [TYPE_UINT] = "uint",
         [TYPE_FLOAT] = "float",
         [TYPE_CHAR] = "char",
         [TYPE_BOOL] = "bool",
@@ -758,16 +768,31 @@ char *format_data_type(Arena *a, DataType *type) {
     };
     bool valid_kind = type && type->kind >= 0 &&
                       type->kind < (int)(sizeof(kind_names) / sizeof(kind_names[0]));
-    const char *name = valid_kind && type->kind != TYPE_CUSTOM
-                           ? kind_names[type->kind] : NULL;
-    size_t name_len = name ? strlen(name) : (type ? type->name.len : 0);
+    char numeric_name[24];
+    const char *name = NULL;
+    if (valid_kind && type->kind == TYPE_CUSTOM) {
+        name = type->name.data;
+    } else if (valid_kind && type->kind == TYPE_INT && type->is_target_sized) {
+        name = "isize";
+    } else if (valid_kind && type->kind == TYPE_UINT && type->is_target_sized) {
+        name = "usize";
+    } else if (valid_kind && type->bit_width > 0 &&
+               (type->kind == TYPE_INT || type->kind == TYPE_UINT || type->kind == TYPE_FLOAT)) {
+        char prefix = type->kind == TYPE_INT ? 'i' : type->kind == TYPE_UINT ? 'u' : 'f';
+        snprintf(numeric_name, sizeof(numeric_name), "%c%u", prefix, type->bit_width);
+        name = numeric_name;
+    } else if (valid_kind) {
+        name = kind_names[type->kind];
+    }
+    size_t name_len = valid_kind && type->kind == TYPE_CUSTOM
+                          ? type->name.len
+                          : name ? strlen(name) : 0;
     int pointer_depth = type ? type->pointer_depth : 0;
 
     char *buf = (char *)arena_alloc(a, name_len + pointer_depth + 1);
     if (!buf) return NULL;
 
     if (name) memcpy(buf, name, name_len);
-    else if (type && type->name.data) memcpy(buf, type->name.data, name_len);
     for (int i = 0; i < pointer_depth; i++) {
         buf[name_len + i] = '*';
     }

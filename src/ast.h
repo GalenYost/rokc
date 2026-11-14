@@ -77,16 +77,20 @@ typedef enum {
     TOKEN_CONST, TOKEN_ENUM,
     TOKEN_TRUE, TOKEN_FALSE,
     TOKEN_SWITCH, TOKEN_CASE,
-    TOKEN_DEFAULT,
+    TOKEN_DEFAULT, TOKEN_AS,
+    TOKEN_DO, TOKEN_UNION,
+    TOKEN_SIZEOF, TOKEN_ALIGNOF,
 
     // TYPES
     TOKEN_CHAR,
-    TOKEN_INT, TOKEN_FLOAT,
+    TOKEN_SIGNED_INT,
+    TOKEN_UNSIGNED_INT,
+    TOKEN_FLOAT,
     TOKEN_BOOL,
     TOKEN_VOID, TOKEN_NULL,
 
     // LITERALS
-    TOKEN_LIT_STR, TOKEN_LIT_CHAR,
+    TOKEN_LIT_STR, TOKEN_LIT_STR_INTERP, TOKEN_LIT_CHAR,
     TOKEN_LIT_INT, TOKEN_LIT_FLOAT,
     TOKEN_IDENT,
 
@@ -97,15 +101,18 @@ typedef enum {
 } TokenType;
 
 typedef enum {
-    TYPE_VOID, TYPE_NULL,
-    TYPE_INT, TYPE_FLOAT,
-    TYPE_CHAR,
-    TYPE_BOOL, TYPE_CUSTOM,
+    TYPE_INT, TYPE_UINT,
+    TYPE_FLOAT,
+    TYPE_CHAR, TYPE_BOOL,
+    TYPE_VOID,
+    TYPE_CUSTOM,
 } TypeKind;
 
 struct DataType {
     TypeKind kind;
     StringStream name;
+    unsigned bit_width; // zero when the width is target-defined or not applicable
+    bool is_target_sized;
     int pointer_depth;
 };
 
