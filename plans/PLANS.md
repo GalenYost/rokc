@@ -24,6 +24,7 @@ This directory contains future, experimental, and unscheduled language ideas. No
 - [Numeric literals](literals.md)
 - [Error handling](error-handling.md)
 - [Compiler diagnostics](diagnostics.md)
+- [Compiler backend](backend.md)
 - [Command-line interface](cli.md)
 - [C ABI and embeddability](abi.md)
 - [Bit-fields](bit-fields.md)

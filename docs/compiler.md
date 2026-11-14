@@ -17,4 +17,5 @@ The compiler traverses the AST to resolve types, ensure variables are declared b
 Any function or expression marked with `comptime` is executed during this phase. This is how custom decorators (like `@Serializable`) manipulate the AST before final code generation. The AST is rewritten or expanded based on the output of the comptime functions.
 
 ### Code Generation
-The validated and expanded AST is translated into the target output (e.g., C code, LLVM IR, or directly to machine code depending on future implementation details).
+The 0.1.0 release stops at the validated front end. Native code generation is planned for 0.2.0
+using QBE as the initial backend; see the [backend plan](../plans/backend.md).
