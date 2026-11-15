@@ -137,7 +137,8 @@ static char *vfmt(Arena *a, const char *fmt, ...) {
 }
 
 static void format_token_literal_bytes(FormatBuffer *b, StringStream view,
-                                       bool escape_quotes, bool escape_backslashes) {
+                                       bool escape_quotes, bool escape_single_quotes,
+                                       bool escape_backslashes) {
     for (size_t i = 0; view.data && i < view.len; i++) {
         unsigned char c = (unsigned char)view.data[i];
         const char *escape = NULL;
@@ -152,6 +153,9 @@ static void format_token_literal_bytes(FormatBuffer *b, StringStream view,
                 break;
             case '"':
                 if (escape_quotes) escape = "\\\"";
+                break;
+            case '\'':
+                if (escape_single_quotes) escape = "\\'";
                 break;
         }
 
@@ -172,12 +176,12 @@ static char *format_literal_token(Arena *a, Token t, const char *name) {
 
     if (t.type == TOKEN_LIT_STR || t.type == TOKEN_LIT_STR_INTERP) {
         format_buffer_append(&b, "\"");
-        format_token_literal_bytes(&b, t.view, true, true);
+        format_token_literal_bytes(&b, t.view, true, false, true);
         format_buffer_append(&b, "\"");
     } else {
-        // Character token views still contain their source quotes and escape spelling.
-        // Escape literal control bytes for display, while preserving source backslashes.
-        format_token_literal_bytes(&b, t.view, false, false);
+        format_buffer_append(&b, "'");
+        format_token_literal_bytes(&b, t.view, false, true, true);
+        format_buffer_append(&b, "'");
     }
     format_buffer_append(&b, ")");
 

@@ -11,6 +11,7 @@ static bool lexer_match(Lexer *lex, char expected);
 static void skip_whitespace(Lexer *lex);
 
 static bool is_digit(char c);
+static bool decode_escape(char escape, char *decoded);
 
 static char lexer_peek(Lexer *lex);
 static char lexer_peek_next(Lexer *lex);
@@ -119,110 +120,153 @@ static char lexer_advance(Lexer *lex) {
 }
 
 static Token lex_string(Lexer *lex) {
-    lex->current++;
+    lexer_advance(lex); // opening quote
+
+    const char *content = lex->current;
+    const char *scan = content;
+    bool valid = true;
     bool has_interpolation = false;
+    bool closed = false;
 
-    size_t max_len = 0;
-    const char *temp = lex->current;
-
-    while (*temp != '"' && *temp != '\0') {
-        if (*temp == '\\' && *(temp + 1) != '\0') {
-            temp++;
-            max_len++;
+    while (*scan != '\0') {
+        if (*scan == '"') {
+            closed = true;
+            break;
         }
-        max_len++; 
-        temp++; 
-    }
-
-    char *dest = (char *)arena_alloc(lex->arena, max_len + 1);
-    size_t actual_len = 0;
-
-    while (!is_at_end(lex) && *lex->current != '"') {
-        if (*lex->current == '$' && *(lex->current + 1) == '{') {
-            has_interpolation = true;
+        if (*scan == '\n') {
+            valid = false;
+            break;
         }
-
-        if (*lex->current == '\n') {
-            lex->line++;
-            lex->col = 1;
-        }
-
-        if (*lex->current == '\\') {
-            lex->current++;
-            
-            switch (*lex->current) {
-                case 'n': dest[actual_len++] = '\n'; break;
-                case 't': dest[actual_len++] = '\t'; break;
-                case 'r': dest[actual_len++] = '\r'; break;
-                case '\\': dest[actual_len++] = '\\'; break;
-                case '"': dest[actual_len++] = '"'; break;
-                case '0': dest[actual_len++] = '\0'; break;
-                default:
-                    dest[actual_len++] = *lex->current; 
-                    break;
+        if (*scan == '\\') {
+            char ignored;
+            if (scan[1] == '\n') {
+                valid = false;
+                scan++;
+                break;
             }
-            lex->current++;
-            lex->col += 2;
-        } else {
-            dest[actual_len++] = *lex->current++;
-            lex->col++;
+            if (scan[1] == '\0' || !decode_escape(scan[1], &ignored)) {
+                valid = false;
+            }
+            if (scan[1] == '\0') {
+                scan++;
+                break;
+            }
+            scan += 2;
+            continue;
         }
+        if (*scan == '$' && scan[1] == '{') has_interpolation = true;
+        scan++;
     }
 
-    if (is_at_end(lex)) {
+    // Advance the lexer to the end of the content without crossing an invalid
+    // unescaped newline, so normal whitespace handling can recover afterward.
+    while (lex->current < scan) lexer_advance(lex);
+
+    if (!closed) valid = false;
+    const char *content_end = scan;
+    if (closed) lexer_advance(lex); // closing quote
+
+    if (!valid) {
         return (Token) {
             .type = TOKEN_UNKNOWN,
-            .view = {0},
+            .view = {
+                .data = (char *)lex->start,
+                .len = (size_t)(lex->current - lex->start),
+            },
             .line = lex->line,
             .col = lex->col,
         };
     }
 
-    lex->current++;
-    lex->col++;
+    size_t source_len = (size_t)(content_end - content);
+    char *dest = (char *)arena_alloc(lex->arena, source_len + 1);
+    if (!dest) {
+        return (Token) { .type = TOKEN_UNKNOWN, .line = lex->line, .col = lex->col };
+    }
 
-    Token t = {
+    size_t decoded_len = 0;
+    for (const char *cursor = content; cursor < content_end;) {
+        if (*cursor == '\\') {
+            decode_escape(cursor[1], &dest[decoded_len++]);
+            cursor += 2;
+        } else {
+            dest[decoded_len++] = *cursor++;
+        }
+    }
+    dest[decoded_len] = '\0';
+
+    return (Token) {
         .type = has_interpolation ? TOKEN_LIT_STR_INTERP : TOKEN_LIT_STR,
-        .view = (StringStream) {
-            .data = dest,
-            .len = actual_len
-        },
+        .view = { .data = dest, .len = decoded_len },
         .line = lex->line,
         .col = lex->col,
     };
-    return t;
 }
 
 static Token lex_char(Lexer *lex) {
-    lexer_advance(lex);
+    lexer_advance(lex); // opening quote
 
-    if (lexer_peek(lex) == '\\') {
+    char decoded = '\0';
+    bool valid = true;
+
+    if (is_at_end(lex) || lexer_peek(lex) == '\n' || lexer_peek(lex) == '\'') {
+        valid = false;
+    } else if (lexer_peek(lex) == '\\') {
         lexer_advance(lex);
-        lexer_advance(lex);
-    } else if (lexer_peek(lex) != '\'') {
-        lexer_advance(lex);
+        if (is_at_end(lex) || lexer_peek(lex) == '\n' ||
+            !decode_escape(lexer_peek(lex), &decoded)) {
+            valid = false;
+            if (!is_at_end(lex) && lexer_peek(lex) != '\n') lexer_advance(lex);
+        } else {
+            lexer_advance(lex);
+        }
+    } else {
+        decoded = lexer_advance(lex);
     }
 
     if (!lexer_match(lex, '\'')) {
-        Token err = { .type = TOKEN_UNKNOWN, .line = lex->line, .col = lex->col };
-        err.view = (StringStream){
-            .data = (char*)lex->start,
-            .len = (size_t)(lex->current - lex->start)
-        };
-        return err;
+        valid = false;
+        while (!is_at_end(lex) && lexer_peek(lex) != '\n' && lexer_peek(lex) != '\'') {
+            lexer_advance(lex);
+        }
+        lexer_match(lex, '\'');
     }
 
-    Token t = {
+    if (!valid) {
+        return (Token) {
+            .type = TOKEN_UNKNOWN,
+            .view = {
+                .data = (char *)lex->start,
+                .len = (size_t)(lex->current - lex->start),
+            },
+            .line = lex->line,
+            .col = lex->col,
+        };
+    }
+
+    char *value = (char *)arena_alloc(lex->arena, 1);
+    if (!value) return (Token) { .type = TOKEN_UNKNOWN, .line = lex->line, .col = lex->col };
+    *value = decoded;
+
+    return (Token) {
         .type = TOKEN_LIT_CHAR,
+        .view = { .data = value, .len = 1 },
         .line = lex->line,
         .col = lex->col,
     };
-    t.view = (StringStream){
-        .data = (char*)lex->start,
-        .len = (size_t)(lex->current - lex->start)
-    };
+}
 
-    return t;
+static bool decode_escape(char escape, char *decoded) {
+    switch (escape) {
+        case 'n': *decoded = '\n'; return true;
+        case 't': *decoded = '\t'; return true;
+        case 'r': *decoded = '\r'; return true;
+        case '\\': *decoded = '\\'; return true;
+        case '"': *decoded = '"'; return true;
+        case '\'': *decoded = '\''; return true;
+        case '0': *decoded = '\0'; return true;
+        default: return false;
+    }
 }
 
 static Token identify_symbols_and_operators(Lexer *lex) {

@@ -8,7 +8,7 @@ generation is deferred to 0.2.0.
 
 - [x] Finalize keyword and reserved-feature token handling.
 - [x] Support numeric literals, separators, bases, and floating-point forms.
-- [ ] Support string and one-byte character literals with escapes.
+- [x] Support string and one-byte character literals with escapes.
 - [ ] Validate comments, unterminated literals, and invalid characters.
 - [ ] Preserve accurate source locations on every token.
 
