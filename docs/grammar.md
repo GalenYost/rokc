@@ -57,12 +57,14 @@ at the lexer: keywords win.
             | "return" | "static" | "struct" | "switch" | "true" | "false"
             | "type" | "union" | "void" | "while"
             | "sizeof" | "alignof"
-            | "i1" | "i2" | "i8" | "i16" | "i32" | "i64" | "i128" | "i256"
-            | "u1" | "u2" | "u8" | "u16" | "u32" | "u64" | "u128" | "u256"
-            | "f16" | "f32" | "f64" | "f80" | "f128" | "usize" | "isize"
+            | "i8" | "i16" | "i32" | "i64"
+            | "u8" | "u16" | "u32" | "u64"
+            | "f32" | "f64" | "usize" | "isize"
 ```
 
-Explicit-width and target-sized types are part of the 0.1 type model and are reserved keywords.
+The only explicit-width integer types in 0.1 are `i8`, `i16`, `i32`, `i64`, `u8`, `u16`,
+`u32`, and `u64`. These exact spellings, along with the listed floating-point and target-sized
+types, are reserved keywords.
 
 ### Numeric literals
 
@@ -123,8 +125,8 @@ associativity) may be reconsidered for a later release.
 
 ```ebnf
 <base_type>       ::= "int" | "char" | "float" | "bool" | "void"
-                    | "i1" | "i2" | "i8" | "i16" | "i32" | "i64" | "i128" | "i256"
-                    | "u1" | "u2" | "u8" | "u16" | "u32" | "u64" | "u128" | "u256"
+                    | "i8" | "i16" | "i32" | "i64"
+                    | "u8" | "u16" | "u32" | "u64"
                     | "f32" | "f64" | "usize" | "isize"
                     | <identifier>          // custom, enum, union, or alias type name
 <type>            ::= [ "const" ] <base_type>
@@ -440,7 +442,6 @@ The following is not part of 0.1 and must produce an unsupported-feature diagnos
 <reserved_comptime_decl> ::= "comptime" <declaration>                          [reserved]
 <generic_suffix>     ::= "<" <type_list> ">"                                   [reserved]
 <comptime_block>     ::= "comptime" <block>                                    [reserved in statement position]
-<distinct_type_decl> ::= "distinct" "type" <identifier> "=" <type> ";"         [reserved]
 <string_interp>      ::= "\"" { ... "\${" <expression> "}" ... } "\""          [reserved]
 <exponentiation>     ::= <unary_expression> "**" <exponentiation>              [reserved]
 <type_list>           ::= <type> { "," <type> }
@@ -448,8 +449,9 @@ The following is not part of 0.1 and must produce an unsupported-feature diagnos
 <expression_list>     ::= <assignment_expression> { "," <assignment_expression> }
 ```
 
-The `[reserved]` items are lexed as their own tokens but must produce an unsupported-feature
-diagnostic when used in 0.1.
+The `[reserved]` items are lexically distinguishable from ordinary 0.1 syntax but must produce an
+unsupported-feature diagnostic when used in 0.1. A string containing an unescaped `${` marker is
+returned as `TOKEN_LIT_STR_INTERP`, not as an ordinary string-literal token.
 
 ---
 

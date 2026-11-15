@@ -53,4 +53,4 @@ void print_node(Node *n);
 
 const char *format_bool(bool value);
 
-char *format_data_type(Arena *a, DataType *type);
+char *format_data_type(Arena *a, const DataType *type);

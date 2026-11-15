@@ -8,20 +8,21 @@ RokC will provide both a target-native default integer and explicit-width intege
 
 ```text
 int  // signed integer whose width follows the compilation target
-i1, i2, i8, i32, i64, i256, ...
-u1, u2, u8, u32, u64, u256, ...
+i8, i16, i32, i64
+u8, u16, u32, u64
 ```
 
-The explicit integer forms are intended to lower directly to the compiler IR/backend where supported. The exact maximum width and unsupported-target behavior remain to be specified.
+Only 8-, 16-, 32-, and 64-bit explicit integer widths are supported. Arbitrary-width integers
+and other widths (including 1-, 2-, 128-, and 256-bit integers) are not part of the language.
+These fixed widths keep the type model and backend lowering practical.
 
 `int` should be represented internally as the target’s native signed integer type. Its width, range, alignment, overflow behavior, and ABI representation must be documented per target.
 
-RokC will follow Zig’s integer model for explicit-width integers:
+Explicit-width integers use the following representation rules:
 
 - signed integers use two’s-complement representation
-- `iN` and `uN` support arbitrary positive widths up to 65535 bits
-- `i1` has the signed two’s-complement range `-1..0`
-- `u1` has the range `0..1`
+- `iN` has the range `-2^(N-1)..2^(N-1)-1`
+- `uN` has the range `0..2^N-1`
 - ordinary arithmetic overflow is illegal behavior
 - wrapping and saturating arithmetic use explicit operators rather than silently changing ordinary arithmetic
 
